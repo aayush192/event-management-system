@@ -54,7 +54,6 @@ export const deleteEventController = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const { id } = req.params;
-    console.log(id);
     if (!user)
       return res
         .status(401)

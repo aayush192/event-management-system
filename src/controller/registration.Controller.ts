@@ -1,0 +1,37 @@
+import { Request, Response } from "express";
+import { userRegistrationservices } from "../services/registration.Services";
+export const userRegistrationController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { eventId } = req.params;
+    console.log(eventId);
+    if (!req.user)
+      return res
+        .status(400)
+        .json({ success: false, message: "user data missing" });
+    const user = req.user;
+    if (!eventId)
+      return res
+        .status(400)
+        .json({ success: false, message: "eventId missing" });
+
+    const userRegistration = await userRegistrationservices(
+      user,
+      Number(eventId)
+    );
+    if (!userRegistration)
+      return res
+        .status(500)
+        .json({ success: false, message: "can't register user" });
+
+    return res.status(201).json({
+      success: true,
+      message: "user registered successfully",
+      data: userRegistration,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: `Error ${error}` });
+  }
+};

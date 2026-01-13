@@ -43,7 +43,6 @@ export const deleteEventServices = async (id: number, user: UserType) => {
           id: id,
         },
       });
-      console.log(checkEvent);
       if (user.id !== checkEvent?.userId)
         throw new Error(`this event is not organized by ${user.name}`);
     }
@@ -52,7 +51,6 @@ export const deleteEventServices = async (id: number, user: UserType) => {
         id: id,
       },
     });
-    console.log(deleteEvent);
     return deleteEvent;
   } catch (error) {
     throw new Error(`internal server error: ${error}`);
