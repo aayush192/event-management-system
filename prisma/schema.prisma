@@ -25,6 +25,22 @@ enum Status{
   REJECTED
 }
 
+
+enum EventCategory {
+  CONFERENCE
+  WORKSHOP
+  MEETUP
+  WEBINAR
+  SEMINAR
+  SOCIAL
+  SPORTS
+  MUSIC
+  OTHER
+}
+
+
+
+
 model User{
   id Int @id @default(autoincrement())
   name String
@@ -32,6 +48,7 @@ model User{
   role Role @default(USER)
   password String
   Posts Event[]
+  registrations Registration[]
 }
 
 model Event{
@@ -40,7 +57,18 @@ model Event{
   description String
   postDate DateTime @default(now())
   eventdate DateTime
-  user User @relation(fields: [userId] ,references: [id])
+  user User @relation(fields: [userId] ,references: [id],onDelete: Cascade)
   status Status @default(PENDING)
+  category EventCategory @default(OTHER)
   userId Int
+  registrations Registration[]
+}
+
+model Registration{
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId],references: [id])
+  userId Int
+  event Event @relation(fields: [eventId],references: [id],onDelete: Cascade)
+  eventId Int
+
 }

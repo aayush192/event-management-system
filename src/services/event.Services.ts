@@ -1,21 +1,60 @@
 import { prisma } from "../lib/prisma";
-interface Data {
-  name: string;
-  description: string;
-  eventdate: Date;
-}
+import { Data, updateEventData, UserType } from "../dataTypes/eventdataTypes";
 export const postEventServices = async (data: Data, userId: number) => {
   try {
     const event = await prisma.event.create({
       data: {
         name: data.name,
         description: data.description,
-        eventdate: data.eventdate,
+        eventdate: new Date(data.eventdate),
+        category: data.category,
         userId: userId,
       },
     });
     return event;
   } catch (error) {
     throw new Error(`internal error : ${error}`);
+  }
+};
+
+//update event status
+export const updateEventStatus = async (data: updateEventData) => {
+  try {
+    const updateEvent = await prisma.event.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        status: data.status,
+      },
+    });
+    return updateEvent;
+  } catch (error) {
+    throw new Error(`internal error ${error}`);
+  }
+};
+
+//delete event
+export const deleteEventServices = async (id: number, user: UserType) => {
+  try {
+    if (user.role === "ORGANIZER") {
+      const checkEvent = await prisma.event.findFirst({
+        where: {
+          id: id,
+        },
+      });
+      console.log(checkEvent);
+      if (user.id !== checkEvent?.userId)
+        throw new Error(`this event is not organized by ${user.name}`);
+    }
+    const deleteEvent = await prisma.event.delete({
+      where: {
+        id: id,
+      },
+    });
+    console.log(deleteEvent);
+    return deleteEvent;
+  } catch (error) {
+    throw new Error(`internal server error: ${error}`);
   }
 };
