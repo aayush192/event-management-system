@@ -19,6 +19,12 @@ enum Role{
   USER
 }
 
+enum Status{
+  APPROVED
+  PENDING
+  REJECTED
+}
+
 model User{
   id Int @id @default(autoincrement())
   name String
@@ -35,5 +41,6 @@ model Event{
   postDate DateTime @default(now())
   eventdate DateTime
   user User @relation(fields: [userId] ,references: [id])
+  status Status @default(PENDING)
   userId Int
 }

@@ -1,12 +1,13 @@
 import express from "express";
+import { getUserController } from "../controller/user.Controller";
 import {
   loginUserController,
   registerUserController,
-  getUserController,
-} from "../controller/user.Controller";
+} from "../controller/auth.Controller";
 import { authLoginServices } from "../services/auth.Services";
 import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
+import { postEventController } from "../controller/event.Controller";
 const userRoutes = express.Router();
 
 userRoutes.get(
@@ -17,5 +18,5 @@ userRoutes.get(
 );
 userRoutes.post("/login", loginUserController);
 userRoutes.post("/register", registerUserController);
-
+userRoutes.post("/event", verifyTokenMiddleWare, postEventController);
 export default userRoutes;
