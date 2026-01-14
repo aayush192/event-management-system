@@ -11,10 +11,12 @@ export const verifyAllowedRoleMiddleWare = (...allowedRoles: Role[]) => {
           .json({ success: false, message: "user role missing" });
 
       if (!allowedRoles.includes(userdata.role)) {
-       res.status(401).json({ success: false, message: "user is not allowed" });
+        return res
+          .status(401)
+          .json({ success: false, message: "user is not allowed" });
       }
-      
-       next();
+
+      next();
     } catch (err) {
       return res
         .status(500)

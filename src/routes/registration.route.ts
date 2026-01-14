@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getRegisteredEventController,
   userRegistrationController,
   userUnregistrationController,
 } from "../controller/registration.Controller";
@@ -19,6 +20,12 @@ registrationRoutes.delete(
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   userUnregistrationController
+);
+registrationRoutes.get(
+  "/registeredevent/:userId",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  getRegisteredEventController
 );
 
 export default registrationRoutes;

@@ -48,3 +48,30 @@ export const userUnregistrationServices = async (
     throw new Error(`${error}`);
   }
 };
+
+//get event registered
+export const getRegisteredEventServices = async (
+  userId: number,
+  user: UserType,
+  page: number,
+  offset: number
+) => {
+  try {
+    if (user.role !== "ADMIN" && user.id !== userId)
+      throw new Error(`user is not allowed`);
+
+    const skip = (page - 1) * offset;
+    const getRegisteredEvent = await prisma.registration.findMany({
+      skip,
+      take: offset,
+      where: {
+        userId: userId,
+      },
+      include: { event: true },
+    });
+    console.log(getRegisteredEvent);
+    return getRegisteredEvent;
+  } catch (error) {
+    throw new Error(`${error}`);
+  }
+};

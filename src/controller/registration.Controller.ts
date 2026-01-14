@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import {
+  getRegisteredEventServices,
   userRegistrationServices,
   userUnregistrationServices,
 } from "../services/registration.Services";
+import { asyncHandler } from "../utils/asyncHandler";
 export const userRegistrationController = async (
   req: Request,
   res: Response
@@ -80,3 +82,30 @@ export const userUnregistrationController = async (
       .json({ success: false, message: `Internal server error : ${error}` });
   }
 };
+
+//events that a user has registered
+
+export const getRegisteredEventController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const page = req.query.page || 1;
+    const offset = req.query.offset || 10;
+    if (!req.user) throw new Error(`can't access user data`);
+    const user = req.user;
+    const getRegisteredEvent = await getRegisteredEventServices(
+      Number(userId),
+      user,
+      Number(page),
+      Number(offset)
+    );
+
+    if (!getRegisteredEvent) throw new Error(`can't retrived registered event`);
+    if (getRegisteredEvent.length === 0)
+      throw new Error(`user hasn't registered in any event`);
+    return res.status(200).json({
+      success: true,
+      message: "registered event retrived successfully",
+      data: getRegisteredEvent,
+    });
+  }
+);

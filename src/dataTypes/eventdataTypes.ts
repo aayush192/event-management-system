@@ -16,16 +16,15 @@ export interface Data {
   category: EventCategory;
 }
 
-type Status = "PENDING" | "APPROVED" | "REJECTED";
+export type Status = "PENDING" | "APPROVED" | "REJECTED";
 export interface updateEventData {
   id: number;
   status: Status;
 }
 
-
- export interface UserType {
-        id: number;
-        name: string;
-        email: string;
-        role: "ADMIN" | "ORGANIZER" | "USER";
-      };
+export interface UserType {
+  id: number;
+  name: string;
+  email: string;
+  role: "ADMIN" | "ORGANIZER" | "USER";
+}

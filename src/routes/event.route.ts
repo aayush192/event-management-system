@@ -3,9 +3,13 @@ import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 import {
   deleteEventController,
+  getApprovedEventController,
+  getEventByStatusController,
+  getOrganizedEventcontroller,
   postEventController,
   updateEventController,
 } from "../controller/event.Controller";
+import { getEventByStatusServices } from "../services/event.Services";
 
 const eventRoutes = express.Router();
 
@@ -14,6 +18,26 @@ eventRoutes.post(
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
   postEventController
+);
+eventRoutes.get(
+  "/organizedevent/:userId",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
+  getOrganizedEventcontroller
+);
+
+eventRoutes.get(
+  "/approvedevent",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  getApprovedEventController
+);
+
+eventRoutes.get(
+  "/:status",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN"),
+  getEventByStatusController
 );
 
 eventRoutes.post(
@@ -29,4 +53,5 @@ eventRoutes.delete(
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
   deleteEventController
 );
+
 export default eventRoutes;

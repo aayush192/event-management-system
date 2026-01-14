@@ -1,5 +1,10 @@
 import { prisma } from "../lib/prisma";
-import { Data, updateEventData, UserType } from "../dataTypes/eventdataTypes";
+import {
+  Data,
+  Status,
+  updateEventData,
+  UserType,
+} from "../dataTypes/eventdataTypes";
 export enum HttpStatus {
   BAD_REQUEST = 400,
   UNAUTHORIZED = 401,
@@ -64,6 +69,74 @@ export const deleteEventServices = async (id: number, user: UserType) => {
   }
 };
 
-
-
 //getEventByStatus
+export const getEventByStatusServices = async (
+  status: Status,
+  page: number,
+  offset: number
+) => {
+  try {
+    const skip = (page - 1) * offset;
+    const getEventByStatus = await prisma.event.findMany({
+      skip,
+      take: offset,
+      where: {
+        status: status,
+      },
+    });
+
+    if (getEventByStatus.length === 0) {
+      throw new Error(`event of this status not available`);
+    }
+    return getEventByStatus;
+  } catch (error) {
+    throw new Error(`internal server error: ${error}`);
+  }
+};
+
+//approved events for user
+export const getApprovedEventServices = async (
+  page: number,
+  offset: number
+) => {
+  try {
+    const skip = (page - 1) * offset;
+    const getApprovedEvent = await prisma.event.findMany({
+      skip,
+      take: offset,
+      where: {
+        status: "APPROVED",
+      },
+    });
+
+    if (getApprovedEvent.length === 0) {
+      throw new Error(`event of this status not available`);
+    }
+    return getApprovedEvent;
+  } catch (error) {
+    throw new Error(`internal server error: ${error}`);
+  }
+};
+
+//organized Event
+export const getOrganizedEventServices = async (
+  user: UserType,
+  userId: number
+) => {
+  try {
+    if (user.role === "ORGANIZER" && userId !== user.id)
+      throw new Error(`can't retrie the events`);
+    const getOrganizedEvent = await prisma.event.findMany({
+      where: {
+        userId: userId,
+      },
+    });
+    if (!getOrganizedEvent) throw new Error(`error while retriving event`);
+    else if (getOrganizedEvent.length === 0)
+      throw new Error(`doesn't have any organized event`);
+
+    return getOrganizedEvent;
+  } catch (error) {
+    throw new Error(`${error}`);
+  }
+};

@@ -1,10 +1,18 @@
 import { Request, Response } from "express";
 import {
   deleteEventServices,
+  getApprovedEventServices,
+  getEventByStatusServices,
+  getOrganizedEventServices,
   postEventServices,
   updateEventStatus,
 } from "../services/event.Services";
-import { Data, updateEventData, UserType } from "../dataTypes/eventdataTypes";
+import {
+  Data,
+  updateEventData,
+  UserType,
+  Status,
+} from "../dataTypes/eventdataTypes";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const postEventController = async (req: Request, res: Response) => {
@@ -73,7 +81,62 @@ export const deleteEventController = asyncHandler(
   }
 );
 
-
-
 //get event by status
 
+export const getEventByStatusController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { status } = req.params;
+    const page = req.query.page || 1;
+    const offset = req.query.offset || 20;
+    const upperCaseStatus = status.toUpperCase();
+    const getEventByStatus = await getEventByStatusServices(
+      upperCaseStatus as Status,
+      Number(page),
+      Number(offset)
+    );
+    return res.status(200).json({
+      success: true,
+      message: "event retrived successfully",
+      data: getEventByStatus,
+    });
+  }
+);
+
+//get approved event
+export const getApprovedEventController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = req.query.page || 1;
+    const offset = req.query.offset || 20;
+    const getApprovedEvent = await getApprovedEventServices(
+      Number(page),
+      Number(offset)
+    );
+    return res.status(200).json({
+      success: true,
+      message: "event retrived successfully",
+      data: getApprovedEvent,
+    });
+  }
+);
+
+//get organized event
+export const getOrganizedEventcontroller = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    if (!req.user) throw new Error(`user data not available`);
+    const user = req.user;
+    const getOrganizedEvent = await getOrganizedEventServices(
+      user,
+      Number(userId)
+    );
+    if (!getOrganizedEvent) throw new Error(`can't get organized events`);
+    else if (getOrganizedEvent.length === 0)
+      throw new Error(`doesn't have any organized events`);
+
+    return res.status(200).json({
+      success: true,
+      message: `retrived organized by organizer ${userId}`,
+      data: getOrganizedEvent,
+    });
+  }
+);
