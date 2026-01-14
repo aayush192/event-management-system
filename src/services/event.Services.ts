@@ -63,3 +63,7 @@ export const deleteEventServices = async (id: number, user: UserType) => {
     throw new Error(`internal server error: ${error}`);
   }
 };
+
+
+
+//getEventByStatus

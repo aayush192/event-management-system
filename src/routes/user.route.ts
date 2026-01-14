@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  deleteUserController,
   getRegisteredUserController,
   getUserByIdController,
   getUserController,
@@ -26,5 +27,11 @@ userRoutes.get(
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
   getRegisteredUserController
+);
+userRoutes.delete(
+  "/user/delete/:id",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  deleteUserController
 );
 export default userRoutes;

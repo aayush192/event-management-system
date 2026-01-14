@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import {
+  deleteUserServices,
   getRegisteredUserServices,
   getUserByIdServices,
   getUserServices,
@@ -65,6 +66,25 @@ export const getRegisteredUserController = asyncHandler(
       success: true,
       message: "registered user retrived successfully",
       data: getRegisteredUser,
+    });
+  }
+);
+
+//delete user controller
+export const deleteUserController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!req.user) throw new Error(`user data not available`);
+    if (!id) throw new Error(`id not available`);
+    const user = req.user;
+    const deleteUser = await deleteUserServices(Number(id), user);
+    if (!deleteUser) throw new Error(`problem while deleting user`);
+
+    const { password, ...userData } = deleteUser;
+    res.status(200).json({
+      success: true,
+      message: "user deleted successfully",
+      data: userData,
     });
   }
 );

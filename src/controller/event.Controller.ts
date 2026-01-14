@@ -72,3 +72,8 @@ export const deleteEventController = asyncHandler(
     });
   }
 );
+
+
+
+//get event by status
+

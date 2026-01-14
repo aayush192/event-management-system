@@ -74,8 +74,28 @@ export const getRegisteredUserServices = async (
   }
 };
 
-
-
-
 //delete User
+export const deleteUserServices = async (id: number, user: UserType) => {
+  try {
+    if (id !== user.id && user.role !== "ADMIN")
+      throw new Error(`user is not allowed to delete this account`);
 
+    const checkUser = await prisma.user.findUnique({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!checkUser) throw new Error(`user doesn't exist`);
+
+    const deleteUser = await prisma.user.delete({
+      where: {
+        id: id,
+      },
+    });
+    console.log(deleteUser);
+    return deleteUser;
+  } catch (error) {
+    throw new Error(`${error}`);
+  }
+};
