@@ -1,5 +1,8 @@
 import express from "express";
-import { userRegistrationController } from "../controller/registration.Controller";
+import {
+  userRegistrationController,
+  userUnregistrationController,
+} from "../controller/registration.Controller";
 import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 
@@ -9,6 +12,13 @@ registrationRoutes.post(
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   userRegistrationController
+);
+
+registrationRoutes.delete(
+  "/remove/:eventId",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  userUnregistrationController
 );
 
 export default registrationRoutes;

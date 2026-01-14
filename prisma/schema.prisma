@@ -66,9 +66,9 @@ model Event{
 
 model Registration{
   id Int @id @default(autoincrement())
-  user User @relation(fields: [userId],references: [id])
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
   userId Int
   event Event @relation(fields: [eventId],references: [id],onDelete: Cascade)
   eventId Int
-
+ @@unique([userId,eventId])
 }

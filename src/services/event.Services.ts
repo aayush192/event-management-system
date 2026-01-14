@@ -1,5 +1,11 @@
 import { prisma } from "../lib/prisma";
 import { Data, updateEventData, UserType } from "../dataTypes/eventdataTypes";
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  FORBIDDEN = 403,
+  NOT_FOUND = 404,
+}
 export const postEventServices = async (data: Data, userId: number) => {
   try {
     const event = await prisma.event.create({
@@ -43,6 +49,7 @@ export const deleteEventServices = async (id: number, user: UserType) => {
           id: id,
         },
       });
+      if (!checkEvent) throw new Error(`doesn't have given event`);
       if (user.id !== checkEvent?.userId)
         throw new Error(`this event is not organized by ${user.name}`);
     }

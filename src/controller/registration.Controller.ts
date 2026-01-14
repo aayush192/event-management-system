@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { userRegistrationservices } from "../services/registration.Services";
+import {
+  userRegistrationServices,
+  userUnregistrationServices,
+} from "../services/registration.Services";
 export const userRegistrationController = async (
   req: Request,
   res: Response
@@ -17,7 +20,7 @@ export const userRegistrationController = async (
         .status(400)
         .json({ success: false, message: "eventId missing" });
 
-    const userRegistration = await userRegistrationservices(
+    const userRegistration = await userRegistrationServices(
       user,
       Number(eventId)
     );
@@ -33,5 +36,47 @@ export const userRegistrationController = async (
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: `Error ${error}` });
+  }
+};
+
+//user Unregistration
+
+export const userUnregistrationController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { eventId } = req.params;
+
+    if (!req.user)
+      return res.status(400).json({
+        success: false,
+        message: `user data is not available`,
+      });
+    if (!eventId)
+      return res.status(400).json({
+        success: false,
+        message: ` eventId is not available`,
+      });
+    const user = req.user;
+
+    const userUnregistration = await userUnregistrationServices(
+      user,
+      Number(eventId)
+    );
+    if (!userUnregistration)
+      return res
+        .status(401)
+        .json({ success: false, message: `error while deleting registration` });
+
+    return res.status(200).json({
+      success: true,
+      message: "registration removed from event",
+      data: userUnregistration,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: `Internal server error : ${error}` });
   }
 };

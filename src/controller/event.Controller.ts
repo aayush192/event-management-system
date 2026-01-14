@@ -5,6 +5,7 @@ import {
   updateEventStatus,
 } from "../services/event.Services";
 import { Data, updateEventData, UserType } from "../dataTypes/eventdataTypes";
+import { asyncHandler } from "../utils/asyncHandler";
 
 export const postEventController = async (req: Request, res: Response) => {
   try {
@@ -50,8 +51,8 @@ export const updateEventController = async (req: Request, res: Response) => {
 
 //delete event
 
-export const deleteEventController = async (req: Request, res: Response) => {
-  try {
+export const deleteEventController = asyncHandler(
+  async (req: Request, res: Response) => {
     const user = req.user;
     const { id } = req.params;
     if (!user)
@@ -69,9 +70,5 @@ export const deleteEventController = async (req: Request, res: Response) => {
       message: `event deleted successfully`,
       data: deleteEvent,
     });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: `internal server error :${error}` });
   }
-};
+);
