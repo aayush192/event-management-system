@@ -16,6 +16,11 @@ export interface Data {
   category: EventCategory;
 }
 
+export interface searchEventType {
+  name?: string;
+  category?: EventCategory;
+  eventdate?: Date;
+}
 export type Status = "PENDING" | "APPROVED" | "REJECTED";
 export interface updateEventData {
   id: number;

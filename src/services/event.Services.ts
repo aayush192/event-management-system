@@ -4,13 +4,9 @@ import {
   Status,
   updateEventData,
   UserType,
+  searchEventType,
 } from "../dataTypes/eventdataTypes";
-export enum HttpStatus {
-  BAD_REQUEST = 400,
-  UNAUTHORIZED = 401,
-  FORBIDDEN = 403,
-  NOT_FOUND = 404,
-}
+
 export const postEventServices = async (data: Data, userId: number) => {
   try {
     const event = await prisma.event.create({
@@ -136,6 +132,52 @@ export const getOrganizedEventServices = async (
       throw new Error(`doesn't have any organized event`);
 
     return getOrganizedEvent;
+  } catch (error) {
+    throw new Error(`${error}`);
+  }
+};
+
+//search for events
+
+export const getEventBySearchServices = async (
+  SearchValue: searchEventType,
+  user: UserType
+) => {
+  try {
+    const filters: any[] = [];
+
+    if (SearchValue.name) {
+      filters.push({
+        name: { contains: SearchValue.name, mode: "insensitive" },
+      });
+    }
+
+    if (SearchValue.category) {
+      filters.push({
+        category: SearchValue.category,
+      });
+    }
+
+    if (SearchValue.eventdate) {
+      filters.push({
+        eventdate: new Date(SearchValue.eventdate),
+      });
+    }
+
+    if (user.role !== "ADMIN")
+      filters.push({
+        status: "APPROVED",
+      });
+    console.log(filters[0]);
+    if (filters.length === 0)
+      throw new Error(`can't search without search values`);
+    const searchEvent = await prisma.event.findMany({
+      where: {
+        AND: filters,
+      },
+    });
+
+    return searchEvent;
   } catch (error) {
     throw new Error(`${error}`);
   }

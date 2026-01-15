@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   deleteEventServices,
   getApprovedEventServices,
+  getEventBySearchServices,
   getEventByStatusServices,
   getOrganizedEventServices,
   postEventServices,
@@ -12,6 +13,7 @@ import {
   updateEventData,
   UserType,
   Status,
+  searchEventType,
 } from "../dataTypes/eventdataTypes";
 import { asyncHandler } from "../utils/asyncHandler";
 
@@ -137,6 +139,32 @@ export const getOrganizedEventcontroller = asyncHandler(
       success: true,
       message: `retrived organized by organizer ${userId}`,
       data: getOrganizedEvent,
+    });
+  }
+);
+
+export const getEventBySearchController = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) throw new Error(`user data missing`);
+    const user = req.user;
+    const searchValue = {
+      name: req.query?.name,
+      category: req.query?.category
+        ? String(req.query.category).toUpperCase()
+        : undefined,
+      eventdate: req.query?.eventdate,
+    };
+
+    const searchEvent = await getEventBySearchServices(
+      searchValue as searchEventType,
+      user
+    );
+    if (searchEvent.length === 0) throw new Error(`doesn't have any event`);
+    if (!searchEvent.length) throw new Error(`can't get event`);
+    return res.status(200).json({
+      success: true,
+      message: `search event retrived successfully`,
+      data: searchEvent,
     });
   }
 );

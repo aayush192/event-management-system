@@ -4,6 +4,7 @@ import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 import {
   deleteEventController,
   getApprovedEventController,
+  getEventBySearchController,
   getEventByStatusController,
   getOrganizedEventcontroller,
   postEventController,
@@ -24,6 +25,12 @@ eventRoutes.get(
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
   getOrganizedEventcontroller
+);
+eventRoutes.get(
+  "/searchevent",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"),
+  getEventBySearchController
 );
 
 eventRoutes.get(
