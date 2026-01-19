@@ -1,9 +1,9 @@
 import { prisma } from "../lib/prisma";
 import { UserType } from "../dataTypes/eventdataTypes";
+import { checkRoleUtility } from "../utils/roleCheck";
 //user registration
-export const userRegistrationServices = async (user: UserType, id: number) => {
+export const userRegistrationServices = async (user: UserType, id: string) => {
   if (!user && !id) throw new Error("userId or EventId missing");
-  if (isNaN(id)) throw new Error("EventId is not a number");
   try {
     const checkEventStatus = await prisma.event.findUnique({
       where: {
@@ -30,7 +30,7 @@ export const userRegistrationServices = async (user: UserType, id: number) => {
 //user unregistration
 export const userUnregistrationServices = async (
   user: UserType,
-  id: number
+  id: string
 ) => {
   if (!user && !id) throw new Error("userId or EventId missing");
   try {
@@ -51,13 +51,14 @@ export const userUnregistrationServices = async (
 
 //get event registered
 export const getRegisteredEventServices = async (
-  userId: number,
+  userId: string,
   user: UserType,
   page: number,
   offset: number
 ) => {
   try {
-    if (user.role !== "ADMIN" && user.id !== userId)
+    const checkRole = await checkRoleUtility(user.role);
+    if (checkRole.role !== "ADMIN" && user.id !== userId)
       throw new Error(`user is not allowed`);
 
     const skip = (page - 1) * offset;

@@ -17,8 +17,7 @@ import {
 } from "../dataTypes/eventdataTypes";
 import { asyncHandler } from "../utils/asyncHandler";
 
-export const postEventController = async (req: Request, res: Response) => {
-  try {
+export const postEventController =asyncHandler( async (req: Request, res: Response) => {
     const data: Data = req.body;
     if (!req.user?.id)
       return res.status(400).json({ success: false, message: "unauthorized" });
@@ -29,15 +28,11 @@ export const postEventController = async (req: Request, res: Response) => {
         .status(500)
         .json({ success: false, message: "error while creating an event" });
     res.status(201).json({ success: true, data: event });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: `error has occurred: ${error}` });
-  }
-};
+  
+});
 
-export const updateEventController = async (req: Request, res: Response) => {
-  try {
+export const updateEventController = asyncHandler(async (req: Request, res: Response) => {
+
     const data: updateEventData = req.body;
     if (!data)
       return res.status(400).json({ success: false, message: "invalid data" });
@@ -52,12 +47,8 @@ export const updateEventController = async (req: Request, res: Response) => {
       message: `status updated successfully`,
       data: updateEvent,
     });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: `internal server error ${error}` });
-  }
-};
+
+});
 
 //delete event
 
@@ -69,7 +60,7 @@ export const deleteEventController = asyncHandler(
       return res
         .status(401)
         .json({ success: false, message: `unauthorized user` });
-    const deleteEvent = await deleteEventServices(Number(id), user);
+    const deleteEvent = await deleteEventServices(id, user);
 
     if (!deleteEvent)
       res
@@ -129,7 +120,7 @@ export const getOrganizedEventcontroller = asyncHandler(
     const user = req.user;
     const getOrganizedEvent = await getOrganizedEventServices(
       user,
-      Number(userId)
+      userId
     );
     if (!getOrganizedEvent) throw new Error(`can't get organized events`);
     else if (getOrganizedEvent.length === 0)

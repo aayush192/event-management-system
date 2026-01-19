@@ -1,7 +1,8 @@
 import { off } from "node:cluster";
 import { prisma } from "../lib/prisma";
 import { UserType } from "../dataTypes/eventdataTypes";
-export const getUserByIdServices = async (id: number) => {
+import { checkRoleUtility } from "../utils/roleCheck";
+export const getUserByIdServices = async (id: string) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -38,13 +39,14 @@ export const getUserServices = async (page: number, offset: number) => {
 };
 
 export const getRegisteredUserServices = async (
-  eventId: number,
+  eventId: string,
   user: UserType,
   page: number,
   offset: number
 ) => {
   try {
-    if (user.role === "ORGANIZER") {
+    const checkRole = await checkRoleUtility(user.role);
+    if (checkRole.role === "ORGANIZER") {
       const checkEvent = await prisma.event.findUnique({
         where: {
           id: eventId,
@@ -75,9 +77,10 @@ export const getRegisteredUserServices = async (
 };
 
 //delete User
-export const deleteUserServices = async (id: number, user: UserType) => {
+export const deleteUserServices = async (id: string, user: UserType) => {
   try {
-    if (id !== user.id && user.role !== "ADMIN")
+    const checkRole = await checkRoleUtility(user.role);
+    if (id !== user.id && checkRole.role !== "ADMIN")
       throw new Error(`user is not allowed to delete this account`);
 
     const checkUser = await prisma.user.findUnique({

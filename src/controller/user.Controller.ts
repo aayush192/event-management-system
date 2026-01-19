@@ -14,7 +14,7 @@ export const getUserByIdController = asyncHandler(
         success: false,
         message: "id not provided",
       });
-    const getUserById = await getUserByIdServices(Number(id));
+    const getUserById = await getUserByIdServices(id);
     if (!getUserById)
       return res.status(404).json({
         success: false,
@@ -56,7 +56,7 @@ export const getRegisteredUserController = asyncHandler(
     if (!req.user) throw new Error(`user data is missing`);
     const user = req.user;
     const getRegisteredUser = await getRegisteredUserServices(
-      Number(eventId),
+      eventId,
       user,
       page,
       offset
@@ -77,7 +77,7 @@ export const deleteUserController = asyncHandler(
     if (!req.user) throw new Error(`user data not available`);
     if (!id) throw new Error(`id not available`);
     const user = req.user;
-    const deleteUser = await deleteUserServices(Number(id), user);
+    const deleteUser = await deleteUserServices(id, user);
     if (!deleteUser) throw new Error(`problem while deleting user`);
 
     const { password, ...userData } = deleteUser;

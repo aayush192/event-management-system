@@ -13,11 +13,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role{
-  ADMIN
-  ORGANIZER
-  USER
-}
 
 enum Status{
   APPROVED
@@ -39,20 +34,26 @@ enum EventCategory {
 }
 
 
-
-
 model User{
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
   name String
   email String @unique
-  role Role @default(USER)
+  role Role @relation(fields: [roleId],references: [id])
+  roleId String
   password String
   Posts Event[]
   registrations Registration[]
 }
 
+model Role{
+  id String @id @default(uuid()) @unique
+  role String @unique
+  user User[]
+}
+
+
 model Event{
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
   name String
   description String
   postDate DateTime @default(now())
@@ -60,15 +61,15 @@ model Event{
   user User @relation(fields: [userId] ,references: [id],onDelete: Cascade)
   status Status @default(PENDING)
   category EventCategory @default(OTHER)
-  userId Int
+  userId String
   registrations Registration[]
 }
 
 model Registration{
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
   user User @relation(fields: [userId],references: [id],onDelete: Cascade)
-  userId Int
+  userId String
   event Event @relation(fields: [eventId],references: [id],onDelete: Cascade)
-  eventId Int
+  eventId String
  @@unique([userId,eventId])
 }

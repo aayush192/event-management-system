@@ -23,13 +23,13 @@ export interface searchEventType {
 }
 export type Status = "PENDING" | "APPROVED" | "REJECTED";
 export interface updateEventData {
-  id: number;
+  id: string;
   status: Status;
 }
 
 export interface UserType {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "ORGANIZER" | "USER";
+  role: string;
 }

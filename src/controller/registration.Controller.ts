@@ -5,11 +5,10 @@ import {
   userUnregistrationServices,
 } from "../services/registration.Services";
 import { asyncHandler } from "../utils/asyncHandler";
-export const userRegistrationController = async (
+export const userRegistrationController =asyncHandler(async (
   req: Request,
   res: Response
 ) => {
-  try {
     const { eventId } = req.params;
     console.log(eventId);
     if (!req.user)
@@ -24,7 +23,7 @@ export const userRegistrationController = async (
 
     const userRegistration = await userRegistrationServices(
       user,
-      Number(eventId)
+      eventId
     );
     if (!userRegistration)
       return res
@@ -36,18 +35,14 @@ export const userRegistrationController = async (
       message: "user registered successfully",
       data: userRegistration,
     });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: `Error ${error}` });
-  }
-};
+});
 
 //user Unregistration
 
-export const userUnregistrationController = async (
+export const userUnregistrationController = asyncHandler(async (
   req: Request,
   res: Response
 ) => {
-  try {
     const { eventId } = req.params;
 
     if (!req.user)
@@ -64,7 +59,7 @@ export const userUnregistrationController = async (
 
     const userUnregistration = await userUnregistrationServices(
       user,
-      Number(eventId)
+      eventId
     );
     if (!userUnregistration)
       return res
@@ -76,12 +71,8 @@ export const userUnregistrationController = async (
       message: "registration removed from event",
       data: userUnregistration,
     });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: `Internal server error : ${error}` });
-  }
-};
+  
+});
 
 //events that a user has registered
 
@@ -93,7 +84,7 @@ export const getRegisteredEventController = asyncHandler(
     if (!req.user) throw new Error(`can't access user data`);
     const user = req.user;
     const getRegisteredEvent = await getRegisteredEventServices(
-      Number(userId),
+      userId,
       user,
       Number(page),
       Number(offset)

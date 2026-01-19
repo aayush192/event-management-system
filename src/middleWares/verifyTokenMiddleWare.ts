@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
 
-interface userData{
-      id: number;
-      name: string;
-      email: string;
-      role: "ADMIN" |"ORGANIZER"| "USER";
-    };
+interface userData {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string;
+}
 
 export const verifyTokenMiddleWare = async (
   req: Request,
@@ -24,9 +24,9 @@ export const verifyTokenMiddleWare = async (
 
     if (!config.JWT_SECRET) throw new Error("jwt error");
 
-      const data = jwt.verify(token, config.JWT_SECRET) as userData;
+    const data = jwt.verify(token, config.JWT_SECRET) as userData;
     // console.log(data);
-    req.user= data;
+    req.user = data;
     next();
   } catch (error) {
     res.status(400).json({ success: false, message: "jwt token invalid" });

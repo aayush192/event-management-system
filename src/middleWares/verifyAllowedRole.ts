@@ -1,16 +1,17 @@
 import { Request, Response, NextFunction } from "express";
+import { checkRoleUtility } from "../utils/roleCheck";
 
-type Role = "ADMIN" | "ORGANIZER" | "USER";
-export const verifyAllowedRoleMiddleWare = (...allowedRoles: Role[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const verifyAllowedRoleMiddleWare = (...allowedRoles: string[]) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userdata = req.user;
       if (!userdata?.role)
         return res
           .status(400)
           .json({ success: false, message: "user role missing" });
+      const checkRole = await checkRoleUtility(userdata.role);
 
-      if (!allowedRoles.includes(userdata.role)) {
+      if (!allowedRoles.includes(checkRole.role.toUpperCase())) {
         return res
           .status(401)
           .json({ success: false, message: "user is not allowed" });

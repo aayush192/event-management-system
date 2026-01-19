@@ -3,10 +3,11 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import config from "../config/config";
 import { error } from "node:console";
+import { checkRoleUtility } from "../utils/roleCheck";
 
 interface Data {
   name: string;
-  role: "ADMIN" | "ORGANIZER" | "USER";
+  role: string;
   email: string;
   password: string;
 }
@@ -37,7 +38,7 @@ export const authLoginServices = async (data: loginData) => {
   }
 
   const token = jwt.sign(
-    { id: User.id, name: User.name, email: User.email, role: User.role },
+    { id: User.id, name: User.name, email: User.email, roleId: User.roleId },
     config.JWT_SECRET,
     {
       expiresIn: config.JWT_EXPIRES_IN as SignOptions["expiresIn"] | "5d",
@@ -57,17 +58,19 @@ export const authRegisterServices = async (data: Data) => {
     },
   });
   if (checkUserIfExist) throw new Error("user already exist");
+  console.log(data);
 
-  if (data.role === "ADMIN")
-    throw new Error("Admin role is not allowed to choose");
+  const checkRole = await checkRoleUtility(data.role);
+  if (!checkRole) throw new Error(`role doesn't exist`);
+  if (checkRole.role === "admin") throw new Error(`can't choose admin role`);
   const hashedpasword = await bcrypt.hashSync(data.password, 10);
 
   const user = await prisma.user.create({
     data: {
       name: data.name,
       email: data.email,
-      role: data.role,
       password: hashedpasword,
+      roleId: checkRole.id,
     },
   });
 

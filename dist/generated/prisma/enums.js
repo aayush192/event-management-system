@@ -7,4 +7,19 @@
 *
 * 🟢 You can import this file directly.
 */
-export {};
+export const Status = {
+    APPROVED: 'APPROVED',
+    PENDING: 'PENDING',
+    REJECTED: 'REJECTED'
+};
+export const EventCategory = {
+    CONFERENCE: 'CONFERENCE',
+    WORKSHOP: 'WORKSHOP',
+    MEETUP: 'MEETUP',
+    WEBINAR: 'WEBINAR',
+    SEMINAR: 'SEMINAR',
+    SOCIAL: 'SOCIAL',
+    SPORTS: 'SPORTS',
+    MUSIC: 'MUSIC',
+    OTHER: 'OTHER'
+};

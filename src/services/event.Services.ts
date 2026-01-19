@@ -6,8 +6,9 @@ import {
   UserType,
   searchEventType,
 } from "../dataTypes/eventdataTypes";
+import { checkRoleUtility } from "../utils/roleCheck";
 
-export const postEventServices = async (data: Data, userId: number) => {
+export const postEventServices = async (data: Data, userId: string) => {
   try {
     const event = await prisma.event.create({
       data: {
@@ -42,9 +43,10 @@ export const updateEventStatus = async (data: updateEventData) => {
 };
 
 //delete event
-export const deleteEventServices = async (id: number, user: UserType) => {
+export const deleteEventServices = async (id: string, user: UserType) => {
   try {
-    if (user.role === "ORGANIZER") {
+    const checkRole = await checkRoleUtility(user.role);
+    if (checkRole.role === "ORGANIZER") {
       const checkEvent = await prisma.event.findFirst({
         where: {
           id: id,
@@ -117,10 +119,11 @@ export const getApprovedEventServices = async (
 //organized Event
 export const getOrganizedEventServices = async (
   user: UserType,
-  userId: number
+  userId: string
 ) => {
   try {
-    if (user.role === "ORGANIZER" && userId !== user.id)
+    const checkRole = await checkRoleUtility(user.role);
+    if (checkRole.role === "ORGANIZER" && userId !== user.id)
       throw new Error(`can't retrie the events`);
     const getOrganizedEvent = await prisma.event.findMany({
       where: {
@@ -145,7 +148,7 @@ export const getEventBySearchServices = async (
 ) => {
   try {
     const filters: any[] = [];
-
+    const checkRole = await checkRoleUtility(user.role);
     if (SearchValue.name) {
       filters.push({
         name: { contains: SearchValue.name, mode: "insensitive" },
@@ -164,7 +167,7 @@ export const getEventBySearchServices = async (
       });
     }
 
-    if (user.role !== "ADMIN")
+    if (checkRole.role !== "ADMIN")
       filters.push({
         status: "APPROVED",
       });
