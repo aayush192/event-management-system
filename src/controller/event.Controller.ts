@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import {
   deleteEventServices,
   getApprovedEventServices,
-  getEventBySearchServices,
+  getEventServices,
   getEventByStatusServices,
   getOrganizedEventServices,
   postEventServices,
@@ -17,7 +17,36 @@ import {
 } from "../dataTypes/eventdataTypes";
 import { asyncHandler } from "../utils/asyncHandler";
 
-export const postEventController =asyncHandler( async (req: Request, res: Response) => {
+export const getEventController = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) throw new Error(`user data missing`);
+    const user = req.user;
+    const searchValue = {
+      name: req.query?.name,
+      category: req.query?.category
+        ? String(req.query.category).toUpperCase()
+        : undefined,
+      eventdate: req.query?.eventdate,
+    };
+    const page = req.query.page || 1;
+    const offset = req.query.offset || 15;
+
+    const searchEvent = await getEventServices(
+      Number(page),
+      Number(offset),
+      searchValue as searchEventType,
+      user
+    );
+    return res.status(200).json({
+      success: true,
+      message: `search event retrived successfully`,
+      data: searchEvent,
+    });
+  }
+);
+
+export const postEventController = asyncHandler(
+  async (req: Request, res: Response) => {
     const data: Data = req.body;
     if (!req.user?.id)
       return res.status(400).json({ success: false, message: "unauthorized" });
@@ -28,11 +57,11 @@ export const postEventController =asyncHandler( async (req: Request, res: Respon
         .status(500)
         .json({ success: false, message: "error while creating an event" });
     res.status(201).json({ success: true, data: event });
-  
-});
+  }
+);
 
-export const updateEventController = asyncHandler(async (req: Request, res: Response) => {
-
+export const updateEventController = asyncHandler(
+  async (req: Request, res: Response) => {
     const data: updateEventData = req.body;
     if (!data)
       return res.status(400).json({ success: false, message: "invalid data" });
@@ -47,8 +76,8 @@ export const updateEventController = asyncHandler(async (req: Request, res: Resp
       message: `status updated successfully`,
       data: updateEvent,
     });
-
-});
+  }
+);
 
 //delete event
 
@@ -118,10 +147,7 @@ export const getOrganizedEventcontroller = asyncHandler(
     const { userId } = req.params;
     if (!req.user) throw new Error(`user data not available`);
     const user = req.user;
-    const getOrganizedEvent = await getOrganizedEventServices(
-      user,
-      userId
-    );
+    const getOrganizedEvent = await getOrganizedEventServices(user, userId);
     if (!getOrganizedEvent) throw new Error(`can't get organized events`);
     else if (getOrganizedEvent.length === 0)
       throw new Error(`doesn't have any organized events`);
@@ -130,32 +156,6 @@ export const getOrganizedEventcontroller = asyncHandler(
       success: true,
       message: `retrived organized by organizer ${userId}`,
       data: getOrganizedEvent,
-    });
-  }
-);
-
-export const getEventBySearchController = asyncHandler(
-  async (req: Request, res: Response) => {
-    if (!req.user) throw new Error(`user data missing`);
-    const user = req.user;
-    const searchValue = {
-      name: req.query?.name,
-      category: req.query?.category
-        ? String(req.query.category).toUpperCase()
-        : undefined,
-      eventdate: req.query?.eventdate,
-    };
-
-    const searchEvent = await getEventBySearchServices(
-      searchValue as searchEventType,
-      user
-    );
-    if (searchEvent.length === 0) throw new Error(`doesn't have any event`);
-    if (!searchEvent.length) throw new Error(`can't get event`);
-    return res.status(200).json({
-      success: true,
-      message: `search event retrived successfully`,
-      data: searchEvent,
     });
   }
 );

@@ -4,8 +4,15 @@ import {
   getRegisteredUserServices,
   getUserByIdServices,
   getUserServices,
+  updateUserServices,
 } from "../services/user.Services";
 import { asyncHandler } from "../utils/asyncHandler";
+import {
+  searchEventType,
+  updateData,
+  UserType,
+} from "../dataTypes/eventdataTypes";
+import apiError from "../utils/apiError";
 export const getUserByIdController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
@@ -85,6 +92,20 @@ export const deleteUserController = asyncHandler(
       success: true,
       message: "user deleted successfully",
       data: userData,
+    });
+  }
+);
+
+export const updateUserController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userdata: updateData = req.body;
+    if (!req.user) throw new apiError(401, `user credintials not available`);
+    const user: UserType = req.user;
+    const updateUser = await updateUserServices(user, userdata);
+    return res.status(200).json({
+      success: true,
+      message: "user updated successfully",
+      data: updateUser,
     });
   }
 );

@@ -1,6 +1,7 @@
 import { off } from "node:cluster";
 import { prisma } from "../lib/prisma";
-import { UserType } from "../dataTypes/eventdataTypes";
+import { updateData, UserType } from "../dataTypes/eventdataTypes";
+import apiError from "../utils/apiError";
 import { checkRoleUtility } from "../utils/roleCheck";
 export const getUserByIdServices = async (id: string) => {
   try {
@@ -45,8 +46,7 @@ export const getRegisteredUserServices = async (
   offset: number
 ) => {
   try {
-    const checkRole = await checkRoleUtility(user.role);
-    if (checkRole.role === "ORGANIZER") {
+    if (user.role === "ORGANIZER") {
       const checkEvent = await prisma.event.findUnique({
         where: {
           id: eventId,
@@ -79,8 +79,7 @@ export const getRegisteredUserServices = async (
 //delete User
 export const deleteUserServices = async (id: string, user: UserType) => {
   try {
-    const checkRole = await checkRoleUtility(user.role);
-    if (id !== user.id && checkRole.role !== "ADMIN")
+    if (id !== user.id && user.role !== "ADMIN")
       throw new Error(`user is not allowed to delete this account`);
 
     const checkUser = await prisma.user.findUnique({
@@ -101,4 +100,30 @@ export const deleteUserServices = async (id: string, user: UserType) => {
   } catch (error) {
     throw new Error(`${error}`);
   }
+};
+
+export const updateUserServices = async (
+  user: UserType,
+  updatedata: updateData
+) => {
+  if (!user.id) throw new apiError(401, "user credientals missing");
+  const data: Partial<updateData> = {};
+
+  if (updatedata.name !== undefined) data.name = updatedata.name;
+  if (updatedata.email !== undefined) data.email = updatedata.email;
+  if (updatedata.roleId !== undefined) {
+    const checkRole = await checkRoleUtility(updatedata.roleId);
+    if (checkRole.role === "admin")
+      throw new apiError(403, "admin role is not allowed to choose");
+
+    data.roleId = updatedata.roleId;
+  }
+  const updateUser = await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data,
+  });
+  if (!updateUser) throw new apiError(500, "can't update the user");
+  return updateUser;
 };

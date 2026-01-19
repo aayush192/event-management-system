@@ -2,12 +2,12 @@ import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import config from "../config/config";
-import { error } from "node:console";
+import apiError from "../utils/apiError";
 import { checkRoleUtility } from "../utils/roleCheck";
 
 interface Data {
   name: string;
-  role: string;
+  roleId: string;
   email: string;
   password: string;
 }
@@ -31,10 +31,11 @@ export const authLoginServices = async (data: loginData) => {
     User.password
   );
 
-  if (!checkIfPasswordMatch) throw new Error("email or password doesn't match");
+  if (!checkIfPasswordMatch)
+    throw new apiError(400, "email or password doesn't match");
 
   if (!config.JWT_SECRET) {
-    throw new Error("internal problem");
+    throw new apiError(500, "internal problem");
   }
 
   const token = jwt.sign(
@@ -46,7 +47,7 @@ export const authLoginServices = async (data: loginData) => {
   );
 
   const { password, ...userData } = User;
-  return { status: 200, data: { userData, token } };
+  return { data: { userData, token } };
 };
 
 //Register User
@@ -60,9 +61,10 @@ export const authRegisterServices = async (data: Data) => {
   if (checkUserIfExist) throw new Error("user already exist");
   console.log(data);
 
-  const checkRole = await checkRoleUtility(data.role);
-  if (!checkRole) throw new Error(`role doesn't exist`);
-  if (checkRole.role === "admin") throw new Error(`can't choose admin role`);
+  const checkRole = await checkRoleUtility(data.roleId);
+  if (!checkRole) throw new apiError(400, `role doesn't exist`);
+  if (checkRole.role === "admin")
+    throw new apiError(401, `can't choose admin role`);
   const hashedpasword = await bcrypt.hashSync(data.password, 10);
 
   const user = await prisma.user.create({
@@ -70,7 +72,7 @@ export const authRegisterServices = async (data: Data) => {
       name: data.name,
       email: data.email,
       password: hashedpasword,
-      roleId: checkRole.id,
+      roleId: data.roleId,
     },
   });
 

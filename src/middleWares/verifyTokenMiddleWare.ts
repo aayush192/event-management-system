@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
+import { checkRoleUtility } from "../utils/roleCheck";
 
 interface userData {
   id: string;
@@ -26,9 +27,16 @@ export const verifyTokenMiddleWare = async (
 
     const data = jwt.verify(token, config.JWT_SECRET) as userData;
     // console.log(data);
-    req.user = data;
+    console.log(data.roleId);
+    const checkrole = await checkRoleUtility(data.roleId);
+
+    req.user = {
+      ...data,
+      role: checkrole.role,
+    };
+
     next();
   } catch (error) {
-    res.status(400).json({ success: false, message: "jwt token invalid" });
+    res.status(400).json({ success: false, message: `${error}` });
   }
 };

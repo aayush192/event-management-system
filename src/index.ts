@@ -1,7 +1,7 @@
 import express from "express";
 import config from "./config/config";
 import router from "./routes";
-import { errorHandler } from "./utils/apiError";
+import { errorHandler } from "./utils/globalErrorHandler";
 
 const app = express();
 app.use(express.json());

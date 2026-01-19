@@ -43,6 +43,7 @@ model User{
   password String
   Posts Event[]
   registrations Registration[]
+  @@index([email])
 }
 
 model Role{
@@ -63,6 +64,7 @@ model Event{
   category EventCategory @default(OTHER)
   userId String
   registrations Registration[]
+  @@index([name])
 }
 
 model Registration{

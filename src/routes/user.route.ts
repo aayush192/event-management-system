@@ -4,9 +4,11 @@ import {
   getRegisteredUserController,
   getUserByIdController,
   getUserController,
+  updateUserController,
 } from "../controller/user.Controller";
 import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
+import { updateUserServices } from "../services/user.Services";
 const userRoutes = express.Router();
 
 userRoutes.get(
@@ -33,5 +35,11 @@ userRoutes.delete(
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   deleteUserController
+);
+userRoutes.put(
+  "/user/update",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  updateUserController
 );
 export default userRoutes;

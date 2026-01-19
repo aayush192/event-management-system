@@ -4,8 +4,8 @@ import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 import {
   deleteEventController,
   getApprovedEventController,
-  getEventBySearchController,
   getEventByStatusController,
+  getEventController,
   getOrganizedEventcontroller,
   postEventController,
   updateEventController,
@@ -14,11 +14,11 @@ import { getEventByStatusServices } from "../services/event.Services";
 
 const eventRoutes = express.Router();
 
-eventRoutes.post(
+eventRoutes.get(
   "/",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
-  postEventController
+  getEventController
 );
 eventRoutes.get(
   "/organizedevent/:userId",
@@ -26,11 +26,11 @@ eventRoutes.get(
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
   getOrganizedEventcontroller
 );
-eventRoutes.get(
-  "/searchevent",
+eventRoutes.post(
+  "/postevent",
   verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"),
-  getEventBySearchController
+  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
+  postEventController
 );
 
 eventRoutes.get(

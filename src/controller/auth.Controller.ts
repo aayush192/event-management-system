@@ -4,12 +4,7 @@ import {
   authLoginServices,
   authRegisterServices,
 } from "../services/auth.Services";
-interface registerData {
-  name: string;
-  email: string;
-  role: string;
-  password: string;
-}
+import { registerData, loginData } from "../dataTypes/eventdataTypes";
 
 export const registerUserController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -26,7 +21,7 @@ export const registerUserController = asyncHandler(
 
 export const loginUserController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data = req.body;
+    const data: loginData = req.body;
     const user = await authLoginServices(data);
     if (!user) throw new Error(`can't find user having this email`);
     res.status(200).json({ user });

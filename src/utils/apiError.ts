@@ -1,22 +1,12 @@
-import { Request, Response, NextFunction } from "express";
-
-export interface AppError extends Error {
-  statusCode?: number;
-  status?: string;
-  isOperational?: boolean;
+class apiError extends Error{
+    statusCode: number;
+    stack?: string | undefined;
+    
+    constructor(statusCode:number,message:string) {
+        super(message)
+        this.statusCode = statusCode;
+        Error.captureStackTrace(this,this.constructor)
+    }
 }
 
-export const errorHandler = (
-  err: AppError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const statusCode = err.statusCode || 500;
-  const status = err.status || "error";
-
-  res.status(statusCode).json({
-    status,
-    message: err.message || "Internal Server Error",
-  });
-};
+export default apiError
