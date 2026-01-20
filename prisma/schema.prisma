@@ -20,6 +20,10 @@ enum Status{
   REJECTED
 }
 
+enum imageType{
+  COVER
+  NORMAL
+}
 
 enum EventCategory {
   CONFERENCE
@@ -45,7 +49,20 @@ model User{
   registrations Registration[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  profile Profile?
+
   @@index([email])
+}
+
+model Profile{
+id String @id @default(uuid())
+dob DateTime
+phoneNo String
+description String
+profileImgUrl String
+publicId String
+user User @relation(fields: [userId],references: [id])
+userId String @unique
 }
 
 model Role{
@@ -67,7 +84,17 @@ model Event{
   category EventCategory @default(OTHER)
   userId String
   registrations Registration[]
+  eventImage EventImage[]
   @@index([name])
+}
+
+
+model EventImage{
+  id String @id @default(uuid())
+  type imageType @default(NORMAL)
+  imageUrl String
+  event Event @relation(fields: [eventId],references: [id])
+  eventId String 
 }
 
 model Registration{
