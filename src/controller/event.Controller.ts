@@ -14,7 +14,7 @@ import {
   UserType,
   Status,
   searchEventType,
-} from "../dataTypes/eventdataTypes";
+} from "../dataTypes/dataTypes";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const getEventController = asyncHandler(

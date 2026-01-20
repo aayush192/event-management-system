@@ -9,6 +9,7 @@ export const verifyAllowedRoleMiddleWare = (...allowedRoles: string[]) => {
           .status(400)
           .json({ success: false, message: "user role missing" });
 
+      console.log(userdata.role);
       if (!allowedRoles.includes(userdata.role.toUpperCase())) {
         return res
           .status(401)

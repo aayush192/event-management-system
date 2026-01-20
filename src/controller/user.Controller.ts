@@ -7,11 +7,7 @@ import {
   updateUserServices,
 } from "../services/user.Services";
 import { asyncHandler } from "../utils/asyncHandler";
-import {
-  searchEventType,
-  updateData,
-  UserType,
-} from "../dataTypes/eventdataTypes";
+import { searchEventType, updateData, UserType } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
 export const getUserByIdController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {

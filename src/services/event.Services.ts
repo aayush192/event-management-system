@@ -6,7 +6,7 @@ import {
   updateEventData,
   UserType,
   searchEventType,
-} from "../dataTypes/eventdataTypes";
+} from "../dataTypes/dataTypes";
 
 export const getEventServices = async (
   page: number,
@@ -74,36 +74,35 @@ export const postEventServices = async (data: Data, userId: string) => {
 
 //update event status
 export const updateEventStatus = async (data: updateEventData) => {
-    const updateEvent = await prisma.event.update({
-      where: {
-        id: data.id,
-      },
-      data: {
-        status: data.status,
-      },
-    });
-    return updateEvent;
- 
+  const updateEvent = await prisma.event.update({
+    where: {
+      id: data.id,
+    },
+    data: {
+      status: data.status,
+    },
+  });
+  return updateEvent;
 };
 
 //delete event
 export const deleteEventServices = async (id: string, user: UserType) => {
-    if (user.role === "ORGANIZER") {
-      const checkEvent = await prisma.event.findFirst({
-        where: {
-          id: id,
-        },
-      });
-      if (!checkEvent) throw new apiError(400,`doesn't have given event`);
-      if (user.id !== checkEvent?.userId)
-        throw new Error(`this event is not organized by ${user.name}`);
-    }
-    const deleteEvent = await prisma.event.delete({
+  if (user.role === "ORGANIZER") {
+    const checkEvent = await prisma.event.findFirst({
       where: {
         id: id,
       },
     });
-    return deleteEvent;
+    if (!checkEvent) throw new apiError(400, `doesn't have given event`);
+    if (user.id !== checkEvent?.userId)
+      throw new Error(`this event is not organized by ${user.name}`);
+  }
+  const deleteEvent = await prisma.event.delete({
+    where: {
+      id: id,
+    },
+  });
+  return deleteEvent;
 };
 
 //getEventByStatus
@@ -112,19 +111,19 @@ export const getEventByStatusServices = async (
   page: number,
   offset: number
 ) => {
-    const skip = (page - 1) * offset;
-    const getEventByStatus = await prisma.event.findMany({
-      skip,
-      take: offset,
-      where: {
-        status: status,
-      },
-    });
+  const skip = (page - 1) * offset;
+  const getEventByStatus = await prisma.event.findMany({
+    skip,
+    take: offset,
+    where: {
+      status: status,
+    },
+  });
 
-    if (getEventByStatus.length === 0) {
-      throw new apiError(400,`event of this status not available`);
-    }
-    return getEventByStatus;
+  if (getEventByStatus.length === 0) {
+    throw new apiError(400, `event of this status not available`);
+  }
+  return getEventByStatus;
 };
 
 //approved events for user
@@ -156,16 +155,16 @@ export const getOrganizedEventServices = async (
   user: UserType,
   userId: string
 ) => {
-    if (user.role === "ORGANIZER" && userId !== user.id)
-      throw new apiError(401,`can't retrive the events`);
-    const getOrganizedEvent = await prisma.event.findMany({
-      where: {
-        userId: userId,
-      },
-    });
-    if (!getOrganizedEvent) throw new Error(`error while retriving event`);
-    else if (getOrganizedEvent.length === 0)
-      throw new apiError(400,`doesn't have any organized event`);
+  if (user.role === "ORGANIZER" && userId !== user.id)
+    throw new apiError(401, `can't retrive the events`);
+  const getOrganizedEvent = await prisma.event.findMany({
+    where: {
+      userId: userId,
+    },
+  });
+  if (!getOrganizedEvent) throw new Error(`error while retriving event`);
+  else if (getOrganizedEvent.length === 0)
+    throw new apiError(400, `doesn't have any organized event`);
 
-    return getOrganizedEvent;
+  return getOrganizedEvent;
 };

@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma";
-import { UserType } from "../dataTypes/eventdataTypes";
+import { UserType } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
 //user registration
 export const userRegistrationServices = async (user: UserType, id: string) => {

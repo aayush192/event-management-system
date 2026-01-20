@@ -1,4 +1,5 @@
 import z from "zod";
+import { omit } from "zod/v4/core/util.cjs";
 
 const data = z.object({
   name: z.string(),
@@ -66,6 +67,26 @@ const updateUser = z.object({
   roleId: z.string().optional(),
 });
 
+const changePasswordData = z.object({
+  email: z.string(),
+  old_password: z.string(),
+  new_password: z.string(),
+});
+
+const verifyOtpData = z.object({
+  otp: z.string(),
+  email: z.string(),
+});
+
+const resetTokenData = z.object({
+  email: z.string(),
+  payloadType: z.string(),
+});
+
+const resetPasswordData = z.object({
+  token: z.string(),
+  newPassword: z.string(),
+});
 export type Data = z.infer<typeof data>;
 
 export type searchEventType = z.infer<typeof searchEvent>;
@@ -80,3 +101,13 @@ export type registerData = z.infer<typeof registerdata>;
 export type loginData = z.infer<typeof logindata>;
 
 export type updateData = z.infer<typeof updateUser>;
+
+export type changePasswordData = z.infer<typeof changePasswordData>;
+
+export type VerifyOtpData = z.infer<typeof verifyOtpData>;
+
+export type getOtpData = Omit<VerifyOtpData, "otp">;
+
+export type resetTokenData = z.infer<typeof resetTokenData>;
+
+export type resetPasswordData = z.infer<typeof resetPasswordData>;

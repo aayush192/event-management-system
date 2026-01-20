@@ -1,6 +1,6 @@
 import { off } from "node:cluster";
 import { prisma } from "../lib/prisma";
-import { updateData, UserType } from "../dataTypes/eventdataTypes";
+import { updateData, UserType } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
 import { checkRoleUtility } from "../utils/roleCheck";
 export const getUserByIdServices = async (id: string) => {
