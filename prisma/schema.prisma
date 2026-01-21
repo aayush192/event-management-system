@@ -20,10 +20,6 @@ enum Status{
   REJECTED
 }
 
-enum imageType{
-  COVER
-  NORMAL
-}
 
 enum EventCategory {
   CONFERENCE
@@ -82,6 +78,8 @@ model Event{
   user User @relation(fields: [userId] ,references: [id],onDelete: Cascade)
   status Status @default(PENDING)
   category EventCategory @default(OTHER)
+  coverImageUrl String
+  publicId String
   userId String
   registrations Registration[]
   eventImage EventImage[]
@@ -91,9 +89,9 @@ model Event{
 
 model EventImage{
   id String @id @default(uuid())
-  type imageType @default(NORMAL)
   imageUrl String
-  event Event @relation(fields: [eventId],references: [id])
+  publicId String
+  event Event @relation(fields: [eventId],references: [id], onDelete:Cascade)
   eventId String 
 }
 

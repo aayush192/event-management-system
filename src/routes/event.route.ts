@@ -8,9 +8,11 @@ import {
   getEventController,
   getOrganizedEventcontroller,
   postEventController,
+  postEventImagesController,
   updateEventController,
 } from "../controller/event.Controller";
 import { getEventByStatusServices } from "../services/event.Services";
+import { upload } from "../middleWares/multer";
 
 const eventRoutes = express.Router();
 
@@ -30,6 +32,7 @@ eventRoutes.post(
   "/postevent",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
+  upload.single("image"),
   postEventController
 );
 
@@ -52,6 +55,13 @@ eventRoutes.patch(
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN"),
   updateEventController
+);
+eventRoutes.post(
+  "/postimage/:eventId",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER "),
+  upload.array("images", 5),
+  postEventImagesController
 );
 
 eventRoutes.delete(

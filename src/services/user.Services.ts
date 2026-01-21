@@ -16,8 +16,9 @@ export const getUserByIdServices = async (id: string) => {
       where: {
         id: id,
       },
-      include: {
-        registrations: { include: { event: true } },
+      include:{
+        registrations: { include: { event: true } }, 
+        profile:true
       },
     });
     if (!user) return user;

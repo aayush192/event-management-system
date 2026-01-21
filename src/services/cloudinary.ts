@@ -10,15 +10,9 @@ cloudinary.config({
 
 export const cloudianryUploadImage = async (fileToUpload: string) => {
   try {
-    console.log(
-      config.CLOUDINARY_CLOUD_NAME,
-      config.CLOUDINARY_SECRET,
-      config.CLOUDINARY_API_KEY
-    );
     const data = await cloudinary.uploader.upload(fileToUpload, {
       resource_type: "auto",
     });
-    console.log(data);
     return data;
   } catch (err) {
     throw new apiError(500, JSON.stringify(err));
@@ -31,5 +25,20 @@ export const cloudinaryRemoveImage = async (imagePublicId: string) => {
   } catch (error) {
     console.log(error);
     throw new apiError(500, "internal server error (cloudinary)");
+  }
+};
+
+export const cloudinaryRemoveMultipleImage = async (
+  publicIds: [{ publicId: string }]
+) => {
+  try {
+    const result = publicIds.map((publicId) => {
+      cloudinaryRemoveImage(publicId.publicId);
+    });
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Internal Server Error (cloudinary)");
   }
 };

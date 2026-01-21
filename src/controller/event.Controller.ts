@@ -7,6 +7,7 @@ import {
   getOrganizedEventServices,
   postEventServices,
   updateEventStatus,
+  postEventImageServices,
 } from "../services/event.Services";
 import apiError from "../utils/apiError";
 import {
@@ -52,7 +53,12 @@ export const postEventController = asyncHandler(
     if (!req.user?.id)
       return res.status(400).json({ success: false, message: "unauthorized" });
     const userId = req.user.id;
-    const event = await postEventServices(data, userId);
+    if (!req.file)
+      return res
+        .status(400)
+        .json({ success: false, message: "cover Image missing" });
+    const file = req.file;
+    const event = await postEventServices(data, file, userId);
     if (!event)
       return res
         .status(500)
@@ -164,6 +170,29 @@ export const getOrganizedEventcontroller = asyncHandler(
       success: true,
       message: `retrived organized by organizer ${userId}`,
       data: getOrganizedEvent,
+    });
+  }
+);
+
+export const postEventImagesController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { eventId } = req.params;
+    if (!req.user) throw new apiError(400, "user credintials missing");
+    const user = req.user;
+
+    if (!req.files) throw new apiError(400, "filepath missing");
+    const files = req.files;
+
+    const eventImage = await postEventImageServices(
+      user,
+      files as Express.Multer.File[],
+      eventId as string
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "uploaded successfully",
+      data: eventImage,
     });
   }
 );
