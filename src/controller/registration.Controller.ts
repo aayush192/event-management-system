@@ -23,7 +23,7 @@ export const userRegistrationController =asyncHandler(async (
 
     const userRegistration = await userRegistrationServices(
       user,
-      eventId
+      eventId as string
     );
     if (!userRegistration)
       return res
@@ -59,7 +59,7 @@ export const userUnregistrationController = asyncHandler(async (
 
     const userUnregistration = await userUnregistrationServices(
       user,
-      eventId
+      eventId as string
     );
     if (!userUnregistration)
       return res
@@ -84,7 +84,7 @@ export const getRegisteredEventController = asyncHandler(
     if (!req.user) throw new Error(`can't access user data`);
     const user = req.user;
     const getRegisteredEvent = await getRegisteredEventServices(
-      userId,
+      userId as string,
       user,
       Number(page),
       Number(offset)

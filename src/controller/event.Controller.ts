@@ -8,6 +8,7 @@ import {
   postEventServices,
   updateEventStatus,
 } from "../services/event.Services";
+import apiError from "../utils/apiError";
 import {
   Data,
   updateEventData,
@@ -89,7 +90,7 @@ export const deleteEventController = asyncHandler(
       return res
         .status(401)
         .json({ success: false, message: `unauthorized user` });
-    const deleteEvent = await deleteEventServices(id, user);
+    const deleteEvent = await deleteEventServices(id as string, user);
 
     if (!deleteEvent)
       res
@@ -110,7 +111,11 @@ export const getEventByStatusController = asyncHandler(
     const { status } = req.params;
     const page = req.query.page || 1;
     const offset = req.query.offset || 20;
-    const upperCaseStatus = status.toUpperCase();
+    const upperCaseStatus = Array.isArray(status)
+      ? () => {
+          throw new apiError(400, `got array of status`);
+        }
+      : status.toUpperCase();
     const getEventByStatus = await getEventByStatusServices(
       upperCaseStatus as Status,
       Number(page),
@@ -147,7 +152,10 @@ export const getOrganizedEventcontroller = asyncHandler(
     const { userId } = req.params;
     if (!req.user) throw new Error(`user data not available`);
     const user = req.user;
-    const getOrganizedEvent = await getOrganizedEventServices(user, userId);
+    const getOrganizedEvent = await getOrganizedEventServices(
+      user,
+      userId as string
+    );
     if (!getOrganizedEvent) throw new Error(`can't get organized events`);
     else if (getOrganizedEvent.length === 0)
       throw new Error(`doesn't have any organized events`);

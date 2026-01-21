@@ -1,8 +1,15 @@
-import { off } from "node:cluster";
+import fs from "fs/promises";
 import { prisma } from "../lib/prisma";
-import { updateData, UserType } from "../dataTypes/dataTypes";
+import {
+  updateData,
+  uploadProfile,
+  UserType,
+  updateProfile,
+} from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
 import { checkRoleUtility } from "../utils/roleCheck";
+import { ProfileUncheckedCreateInput } from "../../generated/prisma/models";
+import { cloudianryUploadImage, cloudinaryRemoveImage } from "./cloudinary";
 export const getUserByIdServices = async (id: string) => {
   try {
     const user = await prisma.user.findUnique({
@@ -104,19 +111,17 @@ export const deleteUserServices = async (id: string, user: UserType) => {
 
 export const updateUserServices = async (
   user: UserType,
-  updatedata: updateData
+  data: updateData
 ) => {
   if (!user.id) throw new apiError(401, "user credientals missing");
-  const data: Partial<updateData> = {};
 
-  if (updatedata.name !== undefined) data.name = updatedata.name;
-  if (updatedata.email !== undefined) data.email = updatedata.email;
-  if (updatedata.roleId !== undefined) {
-    const checkRole = await checkRoleUtility(updatedata.roleId);
+  if (!data.name && !data.email && !data.roleId) throw new apiError(400,'required data missing')
+  if (data.roleId !== undefined) {
+    const checkRole = await checkRoleUtility(data.roleId);
     if (checkRole.role === "admin")
       throw new apiError(403, "admin role is not allowed to choose");
 
-    data.roleId = updatedata.roleId;
+    data.roleId = data.roleId;
   }
   const updateUser = await prisma.user.update({
     where: {
@@ -126,4 +131,89 @@ export const updateUserServices = async (
   });
   if (!updateUser) throw new apiError(500, "can't update the user");
   return updateUser;
+};
+
+export const setProfileServices = async (
+  Data: uploadProfile,
+  file: Express.Multer.File,
+  user: UserType
+) => {
+  console.log("uploading started...");
+  const cloudinaryUpload = await cloudianryUploadImage(file.path);
+  console.log("upload completed");
+  console.log("cloudinary", cloudinaryUpload);
+
+  const setProfile = await prisma.profile.create({
+    data: {
+      dob: new Date(Data.dob),
+      phoneNo: Data.phoneNo,
+      description: Data.description,
+      userId: user.id,
+      profileImgUrl: cloudinaryUpload.secure_url,
+      publicId: cloudinaryUpload.public_id,
+    },
+  });
+
+  if (!setProfile)
+    throw new apiError(500, `error during uploading profile data`);
+
+  fs.unlink(file.path);
+
+  return setProfile;
+};
+
+export const updateProfileImageServices = async (
+  file: Express.Multer.File,
+  user: UserType
+) => {
+  console.log();
+
+  if (!file.path) throw new apiError(400, "file path missing");
+  const profileData = await prisma.profile.findFirst({
+    where: {
+      userId: user.id,
+    },
+  });
+  if (!profileData)
+    throw new apiError(400, "profile of this user doesnot exist");
+
+  const cloudinaryRemove = await cloudinaryRemoveImage(profileData.publicId);
+  console.log(cloudinaryRemove);
+
+  const cloudinaryUpload = await cloudianryUploadImage(file.path);
+  console.log(cloudinaryUpload);
+
+  const updateImage = await prisma.profile.update({
+    where: {
+      userId: user.id,
+    },
+    data: {
+      profileImgUrl: cloudinaryUpload.secure_url,
+      publicId: cloudinaryUpload.public_id,
+    },
+  });
+
+  if (!updateImage) throw new apiError(500, "error while updating data");
+
+  fs.unlink(file.path);
+  return updateImage;
+};
+
+export const updateProfileServices = async (
+  data: updateProfile,
+  user: UserType
+) => {
+  if (!data.description && !data.dob && !data.phoneNo)
+    throw new apiError(400, "data is missing");
+  if (data.dob) {
+    data.dob = new Date(data.dob);
+  }
+  const updateProfile = await prisma.profile.update({
+    where: {
+      userId: user.id,
+    },
+    data,
+  });
+  if (!updateProfile) throw new apiError(500, "error while updating profile");
+  return updateProfile;
 };

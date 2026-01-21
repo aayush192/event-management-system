@@ -14,7 +14,7 @@ const authRoutes = express.Router();
 
 authRoutes.post("/login", loginUserController);
 authRoutes.post("/register", registerUserController);
-authRoutes.put(
+authRoutes.patch(
   "/changepassword",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
@@ -22,6 +22,6 @@ authRoutes.put(
 );
 authRoutes.post("/otp", getOtpController);
 authRoutes.post("/verify", verifyOtpController);
-authRoutes.put("/reset", resetPasswordController);
+authRoutes.patch("/reset", resetPasswordController);
 
 export default authRoutes;

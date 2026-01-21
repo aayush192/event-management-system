@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.use("/", router);
 app.use(errorHandler);
-
+app.use(express.urlencoded({ extended: true }));
 app.listen(config.PORT, () => {
   console.log("server has started");
 });

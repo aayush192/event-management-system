@@ -27,7 +27,7 @@ export const verifyTokenMiddleWare = async (
 
     const data = jwt.verify(token, config.JWT_SECRET) as userData;
     // console.log(data);
-    console.log(data.roleId);
+
     const checkrole = await checkRoleUtility(data.roleId);
 
     req.user = {

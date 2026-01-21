@@ -47,7 +47,7 @@ eventRoutes.get(
   getEventByStatusController
 );
 
-eventRoutes.post(
+eventRoutes.patch(
   "/update",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN"),

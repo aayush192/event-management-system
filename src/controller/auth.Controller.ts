@@ -30,6 +30,10 @@ export const registerUserController = asyncHandler(
   }
 );
 
+
+
+
+
 export const loginUserController = asyncHandler(
   async (req: Request, res: Response) => {
     const data: loginData = req.body;
@@ -84,3 +88,4 @@ export const resetPasswordController = asyncHandler(
     });
   }
 );
+

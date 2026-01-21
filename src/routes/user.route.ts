@@ -4,11 +4,15 @@ import {
   getRegisteredUserController,
   getUserByIdController,
   getUserController,
+  setProfileController,
+  updateProfileController,
+  updateProfileImageController,
   updateUserController,
 } from "../controller/user.Controller";
 import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 import { updateUserServices } from "../services/user.Services";
+import { upload } from "../middleWares/multer";
 const userRoutes = express.Router();
 
 userRoutes.get(
@@ -36,10 +40,31 @@ userRoutes.delete(
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   deleteUserController
 );
-userRoutes.put(
+userRoutes.patch(
   "/user/update",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   updateUserController
+);
+
+userRoutes.post(
+  "/user/profile",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  upload.single("image"),
+  setProfileController
+);
+userRoutes.patch(
+  "/user/update/image",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  upload.single("image"),
+  updateProfileImageController
+);
+userRoutes.patch(
+  "/user/update/profile",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  updateProfileController
 );
 export default userRoutes;
