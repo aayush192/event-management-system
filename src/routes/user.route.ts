@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  deleteProfileImageController,
   deleteUserController,
   getRegisteredUserController,
   getUserByIdController,
@@ -34,12 +35,7 @@ userRoutes.get(
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
   getRegisteredUserController
 );
-userRoutes.delete(
-  "/user/delete/:id",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  deleteUserController
-);
+
 userRoutes.patch(
   "/user/update",
   verifyTokenMiddleWare,
@@ -67,4 +63,18 @@ userRoutes.patch(
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   updateProfileController
 );
+userRoutes.delete(
+  "/user/delete/profileimage",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  deleteProfileImageController
+);
+
+userRoutes.delete(
+  "/user/delete/:id",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  deleteUserController
+);
+
 export default userRoutes;

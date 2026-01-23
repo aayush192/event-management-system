@@ -36,7 +36,7 @@ const searchEvent = z
   })
   .partial();
 
-const updateEvent = z.object({
+const updateEventStatus = z.object({
   id: z.string(),
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
 });
@@ -47,6 +47,13 @@ const userDataType = z.object({
   email: z.string(),
   role: z.string(),
   roleId: z.string(),
+});
+const userLoginType = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  roleId: z.string(),
+  password: z.string(),
 });
 
 const registerdata = z.object({
@@ -91,7 +98,7 @@ const resetPasswordData = z.object({
 const uploadProfile = z.object({
   dob: z.date(),
   phoneNo: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   userId: z.string(),
 });
 
@@ -101,14 +108,39 @@ const updateProfile = z.object({
   description: z.string().optional(),
 });
 
+const refreshTokenType = z.object({
+  id: z.string(),
+});
+
+export const updateEvent = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  eventdate: z.string().optional(),
+  category: z.enum([
+    "CONFERENCE",
+    "WORKSHOP",
+    "MEETUP",
+    "WEBINAR",
+    "SEMINAR",
+    "SOCIAL",
+    "SPORTS",
+    "MUSIC",
+    "OTHER",
+  ]),
+});
 export type Data = z.infer<typeof data>;
 
 export type searchEventType = z.infer<typeof searchEvent>;
 
-export type updateEventData = z.infer<typeof updateEvent>;
+export type updateEventData = z.infer<typeof updateEventStatus>;
+
+export type updateEvent = z.infer<typeof updateEvent>;
+
 export type Status = "PENDING" | "APPROVED" | "REJECTED";
 
 export type UserType = z.infer<typeof userDataType>;
+
+export type userLoginType = z.infer<typeof userLoginType>;
 
 export type registerData = z.infer<typeof registerdata>;
 
@@ -123,6 +155,8 @@ export type VerifyOtpData = z.infer<typeof verifyOtpData>;
 export type getOtpData = Omit<VerifyOtpData, "otp">;
 
 export type resetTokenData = z.infer<typeof resetTokenData>;
+
+export type refreshTokenData = z.infer<typeof refreshTokenType>;
 
 export type resetPasswordData = z.infer<typeof resetPasswordData>;
 

@@ -3,6 +3,7 @@ import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 import {
   deleteEventController,
+  deleteEventImagesController,
   getApprovedEventController,
   getEventByStatusController,
   getEventController,
@@ -10,6 +11,7 @@ import {
   postEventController,
   postEventImagesController,
   updateEventController,
+  updateEventStatusController,
 } from "../controller/event.Controller";
 import { getEventByStatusServices } from "../services/event.Services";
 import { upload } from "../middleWares/multer";
@@ -19,7 +21,7 @@ const eventRoutes = express.Router();
 eventRoutes.get(
   "/",
   verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
+  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"),
   getEventController
 );
 eventRoutes.get(
@@ -32,15 +34,8 @@ eventRoutes.post(
   "/postevent",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
-  upload.single("image"),
+  upload.single("coverImage"),
   postEventController
-);
-
-eventRoutes.get(
-  "/approvedevent",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  getApprovedEventController
 );
 
 eventRoutes.get(
@@ -51,10 +46,17 @@ eventRoutes.get(
 );
 
 eventRoutes.patch(
-  "/update",
+  "/update/event/:eventId",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
+  updateEventController
+);
+
+eventRoutes.patch(
+  "/update/status/:status",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN"),
-  updateEventController
+  updateEventStatusController
 );
 eventRoutes.post(
   "/postimage/:eventId",
@@ -70,5 +72,13 @@ eventRoutes.delete(
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
   deleteEventController
 );
+eventRoutes.delete(
+  "/delete/image/:eventImageId",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
+  deleteEventImagesController
+);
+
+
 
 export default eventRoutes;

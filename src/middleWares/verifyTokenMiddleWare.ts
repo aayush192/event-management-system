@@ -26,7 +26,7 @@ export const verifyTokenMiddleWare = async (
     if (!config.JWT_SECRET) throw new Error("jwt error");
 
     const data = jwt.verify(token, config.JWT_SECRET) as userData;
-    // console.log(data);
+    console.log(data);
 
     const checkrole = await checkRoleUtility(data.roleId);
 

@@ -8,6 +8,8 @@ import {
   postEventServices,
   updateEventStatus,
   postEventImageServices,
+  deleteEventImagesServices,
+  updateEventServices,
 } from "../services/event.Services";
 import apiError from "../utils/apiError";
 import {
@@ -16,12 +18,14 @@ import {
   UserType,
   Status,
   searchEventType,
+  updateEvent,
 } from "../dataTypes/dataTypes";
 import { asyncHandler } from "../utils/asyncHandler";
 
+//get event
 export const getEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new Error(`user data missing`);
+    if (!req.user) throw new apiError(401, `user data missing`);
     const user = req.user;
     const searchValue = {
       name: req.query?.name,
@@ -50,33 +54,27 @@ export const getEventController = asyncHandler(
 export const postEventController = asyncHandler(
   async (req: Request, res: Response) => {
     const data: Data = req.body;
-    if (!req.user?.id)
-      return res.status(400).json({ success: false, message: "unauthorized" });
+    if (!req.user?.id) throw new apiError(401, "user data missing");
     const userId = req.user.id;
-    if (!req.file)
-      return res
-        .status(400)
-        .json({ success: false, message: "cover Image missing" });
+    if (!req.file) throw new apiError(400, "cover image missing");
+
     const file = req.file;
     const event = await postEventServices(data, file, userId);
-    if (!event)
-      return res
-        .status(500)
-        .json({ success: false, message: "error while creating an event" });
-    res.status(201).json({ success: true, data: event });
+    if (!event) throw new apiError(500, "error while creating an event");
+    return res.status(201).json({
+      success: true,
+      message: "event created successfully",
+      data: event,
+    });
   }
 );
 
-export const updateEventController = asyncHandler(
+export const updateEventStatusController = asyncHandler(
   async (req: Request, res: Response) => {
     const data: updateEventData = req.body;
-    if (!data)
-      return res.status(400).json({ success: false, message: "invalid data" });
+    if (!data) throw new apiError(400, "data missing");
     const updateEvent = await updateEventStatus(data);
-    if (!updateEvent)
-      return res
-        .status(500)
-        .json({ success: false, message: `error during updating status` });
+    if (!updateEvent) throw new apiError(500, "error while updating status");
 
     return res.status(200).json({
       success: true,
@@ -92,17 +90,12 @@ export const deleteEventController = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user;
     const { id } = req.params;
-    if (!user)
-      return res
-        .status(401)
-        .json({ success: false, message: `unauthorized user` });
+    if (!user) throw new apiError(401, "user data missing");
     const deleteEvent = await deleteEventServices(id as string, user);
 
-    if (!deleteEvent)
-      res
-        .status(500)
-        .json({ success: false, message: `error while deleting event` });
-    res.status(200).json({
+    if (!deleteEvent) throw new apiError(500, "error while deleting event");
+
+    return res.status(200).json({
       success: true,
       message: `event deleted successfully`,
       data: deleteEvent,
@@ -156,15 +149,17 @@ export const getApprovedEventController = asyncHandler(
 export const getOrganizedEventcontroller = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    if (!req.user) throw new Error(`user data not available`);
+    if (!req.user) throw new apiError(401, `user data missing`);
     const user = req.user;
     const getOrganizedEvent = await getOrganizedEventServices(
       user,
       userId as string
     );
-    if (!getOrganizedEvent) throw new Error(`can't get organized events`);
-    else if (getOrganizedEvent.length === 0)
-      throw new Error(`doesn't have any organized events`);
+    if (!getOrganizedEvent)
+      throw new apiError(500, `can't get organized events`);
+
+    if (getOrganizedEvent.length === 0)
+      throw new apiError(404, `doesn't have any organized events`);
 
     return res.status(200).json({
       success: true,
@@ -177,7 +172,7 @@ export const getOrganizedEventcontroller = asyncHandler(
 export const postEventImagesController = asyncHandler(
   async (req: Request, res: Response) => {
     const { eventId } = req.params;
-    if (!req.user) throw new apiError(400, "user credintials missing");
+    if (!req.user) throw new apiError(400, "user data missing");
     const user = req.user;
 
     if (!req.files) throw new apiError(400, "filepath missing");
@@ -189,10 +184,54 @@ export const postEventImagesController = asyncHandler(
       eventId as string
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "uploaded successfully",
       data: eventImage,
+    });
+  }
+);
+
+//update event
+export const updateEventController = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) throw new apiError(401, "user data missing");
+    const user = req.user;
+    const { eventId } = req.params;
+    if (Array.isArray(eventId))
+      throw new apiError(400, "eventId can't be in array");
+    const data = req.body;
+    const updateEvent = await updateEventServices(
+      eventId,
+      data as updateEvent,
+      user
+    );
+    return res.status(200).json({
+      success: true,
+      message: "event updated succesfully",
+      data: updateEvent,
+    });
+  }
+);
+
+//delete event image
+export const deleteEventImagesController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { eventImageId } = req.params;
+    if (Array.isArray(eventImageId))
+      throw new apiError(400, "params shouldn't be an array");
+    console.log(eventImageId);
+    if (!req.user) throw new apiError(401, "user data missing ");
+    const user = req.user;
+    const deleteEventImage = await deleteEventImagesServices(
+      eventImageId,
+      user
+    );
+
+    return res.status(200).json({
+      success: false,
+      message: "image deleted successfully",
+      data: deleteEventImage,
     });
   }
 );

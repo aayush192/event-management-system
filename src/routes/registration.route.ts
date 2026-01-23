@@ -16,7 +16,7 @@ registrationRoutes.post(
 );
 
 registrationRoutes.delete(
-  "/remove/:eventId",
+  "/delete/:eventId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   userUnregistrationController

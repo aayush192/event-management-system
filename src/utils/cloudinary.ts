@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import config from "../config/config";
 import path from "node:path";
-import apiError from "../utils/apiError";
+import apiError from "./apiError";
 cloudinary.config({
   cloud_name: config.CLOUDINARY_CLOUD_NAME,
   api_key: config.CLOUDINARY_API_KEY,

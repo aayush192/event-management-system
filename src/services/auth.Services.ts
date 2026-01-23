@@ -1,10 +1,16 @@
 import bcrypt from "bcrypt";
-import jwt, { SignOptions } from "jsonwebtoken";
+import jwt, { Jwt, SignOptions } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import config from "../config/config";
 import apiError from "../utils/apiError";
 import { checkRoleUtility } from "../utils/roleCheck";
-import { changePasswordData, resetTokenData } from "../dataTypes/dataTypes";
+import {
+  changePasswordData,
+  refreshTokenData,
+  resetTokenData,
+  userLoginType,
+  UserType,
+} from "../dataTypes/dataTypes";
 import crypto from "crypto";
 import { sendMail } from "../utils/email";
 
@@ -19,38 +25,75 @@ interface loginData {
   password: string;
 }
 
+const generateTokens = (User: userLoginType) => {
+  if (!config.JWT_SECRET || !config.JWT_REFRESH_TOKEN_EXPIRES_IN) {
+    throw new apiError(500, "jwt config missing");
+  }
+
+  const newAccessToken = jwt.sign(
+    { id: User.id, name: User.name, email: User.email, roleId: User.roleId },
+    config.JWT_SECRET,
+    {
+      expiresIn: config.JWT_EXPIRES_IN as SignOptions["expiresIn"] | "1d",
+    }
+  );
+
+  const newRefreshToken = jwt.sign(
+    {
+      id: User.id,
+    },
+    config.JWT_SECRET,
+    {
+      expiresIn: config.JWT_REFRESH_TOKEN_EXPIRES_IN as
+        | SignOptions["expiresIn"]
+        | "5d",
+    }
+  );
+
+  return { newAccessToken, newRefreshToken };
+};
+
 //user login
 export const authLoginServices = async (data: loginData) => {
-  const User = await prisma.user.findFirst({
+  const fetchedUserData = await prisma.user.findFirst({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      roleId: true,
+      password: true,
+    },
     where: {
       email: data.email,
     },
   });
 
-  if (!User) throw new Error("user doesn't exist");
+  if (!fetchedUserData) throw new Error("user doesn't exist");
 
   const checkIfPasswordMatch = await bcrypt.compare(
     data.password,
-    User.password
+    fetchedUserData.password
   );
 
   if (!checkIfPasswordMatch)
     throw new apiError(400, "email or password doesn't match");
 
-  if (!config.JWT_SECRET) {
-    throw new apiError(500, "internal problem");
-  }
-
-  const token = jwt.sign(
-    { id: User.id, name: User.name, email: User.email, roleId: User.roleId },
-    config.JWT_SECRET,
-    {
-      expiresIn: config.JWT_EXPIRES_IN as SignOptions["expiresIn"] | "5d",
-    }
+  const { newAccessToken, newRefreshToken } = generateTokens(
+    fetchedUserData as userLoginType
   );
 
-  const { password, ...userData } = User;
-  return { data: { userData, token } };
+  const storeRefreshToken = await prisma.user.update({
+    where: {
+      id: fetchedUserData.id,
+    },
+    data: {
+      refreshToken: newRefreshToken,
+    },
+  });
+  if (!storeRefreshToken)
+    throw new apiError(500, "Error while updating user table");
+  const { password, ...userData } = fetchedUserData;
+  return { data: { userData, newAccessToken, newRefreshToken } };
 };
 
 //Register User
@@ -122,12 +165,9 @@ export const getOtpServices = async (email: string) => {
   });
   if (!checkUser) throw new apiError(400, `user with this email doesn't exist`);
 
-  
   const deleteAny = await prisma.otp.deleteMany({
     where: {
-      
-          email: email
-    
+      email: email,
     },
   });
   const otp = crypto.randomInt(100000, 999999).toString();
@@ -207,4 +247,44 @@ export const resetPasswordServices = async (
 
   const { password, ...userData } = resetPassword;
   return userData;
+};
+
+//refreshAccessToken
+export const refreshAccessTokenServices = async (refreshToken: string) => {
+  if (!refreshToken) throw new apiError(400, "refresh Token missing");
+
+  const token = jwt.verify(
+    refreshToken,
+    config.JWT_SECRET as jwt.Secret
+  ) as refreshTokenData;
+
+  const fetchedUserData = await prisma.user.findUnique({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      roleId: true,
+      password: true,
+    },
+    where: {
+      id: token.id,
+    },
+  });
+
+  if (!fetchedUserData)
+    throw new apiError(400, "user having this token is missing");
+
+  const { newAccessToken, newRefreshToken } = generateTokens(fetchedUserData);
+  const storeRefreshToken = await prisma.user.update({
+    where: {
+      id: fetchedUserData.id,
+    },
+    data: {
+      refreshToken: newRefreshToken,
+    },
+  });
+  if (!storeRefreshToken)
+    throw new apiError(500, "error while storing refresh token");
+
+  return { data: { newAccessToken, newRefreshToken } };
 };

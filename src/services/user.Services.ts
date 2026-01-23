@@ -9,42 +9,39 @@ import {
 import apiError from "../utils/apiError";
 import { checkRoleUtility } from "../utils/roleCheck";
 import { ProfileUncheckedCreateInput } from "../../generated/prisma/models";
-import { cloudianryUploadImage, cloudinaryRemoveImage } from "./cloudinary";
-export const getUserByIdServices = async (id: string) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: id,
-      },
-      include:{
-        registrations: { include: { event: true } }, 
-        profile:true
-      },
-    });
-    if (!user) return user;
+import {
+  cloudianryUploadImage,
+  cloudinaryRemoveImage,
+} from "../utils/cloudinary";
 
-    const { password, ...userData } = user;
-    return userData;
-  } catch (error) {
-    throw new Error(`error occurred ${error}`);
-  }
+//get user by id
+export const getUserByIdServices = async (id: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: id,
+    },
+    include: {
+      registrations: { include: { event: true } },
+      profile: true,
+    },
+  });
+  if (!user) throw new apiError(404, "user havig this id not found");
+
+  const { password, ...userData } = user;
+  return userData;
 };
 
 export const getUserServices = async (page: number, offset: number) => {
-  try {
-    const skip = (page - 1) * offset;
-    const user = await prisma.user.findMany({
-      skip: skip,
-      take: offset,
-    });
-    if (!user) return user;
-    console.log(user);
-    const userData = user.map(({ password, ...rest }) => rest);
-    console.log(JSON.stringify(userData));
-    return userData;
-  } catch (error) {
-    throw new Error(`error occurred ${error}`);
-  }
+  const skip = (page - 1) * offset;
+  const user = await prisma.user.findMany({
+    skip: skip,
+    take: offset,
+  });
+  if (!user) throw new apiError(404, "user data not found");
+  console.log(user);
+  const userData = user.map(({ password, ...rest }) => rest);
+  console.log(JSON.stringify(userData));
+  return userData;
 };
 
 export const getRegisteredUserServices = async (
@@ -110,13 +107,11 @@ export const deleteUserServices = async (id: string, user: UserType) => {
   }
 };
 
-export const updateUserServices = async (
-  user: UserType,
-  data: updateData
-) => {
+export const updateUserServices = async (user: UserType, data: updateData) => {
   if (!user.id) throw new apiError(401, "user credientals missing");
 
-  if (!data.name && !data.email && !data.roleId) throw new apiError(400,'required data missing')
+  if (!data.name && !data.email && !data.roleId)
+    throw new apiError(400, "required data missing");
   if (data.roleId !== undefined) {
     const checkRole = await checkRoleUtility(data.roleId);
     if (checkRole.role === "admin")
@@ -135,32 +130,32 @@ export const updateUserServices = async (
 };
 
 export const setProfileServices = async (
-  Data: uploadProfile,
+  data: uploadProfile,
   file: Express.Multer.File,
   user: UserType
 ) => {
+  data.dob = new Date(data.dob);
   console.log("uploading started...");
-  const cloudinaryUpload = await cloudianryUploadImage(file.path);
-  console.log("upload completed");
-  console.log("cloudinary", cloudinaryUpload);
+  if (file.path) {
+    const cloudinaryUpload = await cloudianryUploadImage(file.path);
+    console.log("upload completed");
+    console.log("cloudinary", cloudinaryUpload);
 
-  const setProfile = await prisma.profile.create({
-    data: {
-      dob: new Date(Data.dob),
-      phoneNo: Data.phoneNo,
-      description: Data.description,
-      userId: user.id,
-      profileImgUrl: cloudinaryUpload.secure_url,
-      publicId: cloudinaryUpload.public_id,
-    },
-  });
+    const setProfile = await prisma.profile.create({
+      data: {
+        ...data,
+        profileImgUrl: cloudinaryUpload.secure_url,
+        publicId: cloudinaryUpload.public_id,
+      },
+    });
 
-  if (!setProfile)
-    throw new apiError(500, `error during uploading profile data`);
+    if (!setProfile)
+      throw new apiError(500, `error during uploading profile data`);
 
-  fs.unlink(file.path);
+    fs.unlink(file.path);
 
-  return setProfile;
+    return setProfile;
+  }
 };
 
 export const updateProfileImageServices = async (
@@ -177,6 +172,9 @@ export const updateProfileImageServices = async (
   });
   if (!profileData)
     throw new apiError(400, "profile of this user doesnot exist");
+
+  if (!profileData.profileImgUrl || !profileData.publicId)
+    throw new apiError(400, "profile  doesnot exist");
 
   const cloudinaryRemove = await cloudinaryRemoveImage(profileData.publicId);
   console.log(cloudinaryRemove);
@@ -198,6 +196,30 @@ export const updateProfileImageServices = async (
 
   fs.unlink(file.path);
   return updateImage;
+};
+
+export const deleteProfileImageServices = async (user: UserType) => {
+  const checkProfile = await prisma.profile.findFirst({
+    where: {
+      userId: user.id,
+    },
+  });
+  if (!checkProfile?.publicId) throw new apiError(404, "profile not found");
+
+  const cloudinaryDelete = await cloudinaryRemoveImage(checkProfile.publicId);
+
+  const deleteProfile = await prisma.profile.update({
+    where: {
+      userId: user.id,
+    },
+    data: {
+      profileImgUrl: null,
+      publicId: null,
+    },
+  });
+
+  if (!deleteProfile) throw new apiError(500, "error while deleting image");
+  return deleteProfile;
 };
 
 export const updateProfileServices = async (

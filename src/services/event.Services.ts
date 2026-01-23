@@ -7,13 +7,16 @@ import {
   updateEventData,
   UserType,
   searchEventType,
+  updateEvent,
 } from "../dataTypes/dataTypes";
 import {
   cloudianryUploadImage,
   cloudinaryRemoveImage,
   cloudinaryRemoveMultipleImage,
-} from "./cloudinary";
+} from "../utils/cloudinary";
+import { deleteEventImagesController } from "../controller/event.Controller";
 
+//get event by search
 export const getEventServices = async (
   page: number,
   offset: number,
@@ -71,6 +74,7 @@ export const getEventServices = async (
   return searchEvent;
 };
 
+//pst event
 export const postEventServices = async (
   data: Data,
   file: Express.Multer.File,
@@ -144,6 +148,32 @@ export const deleteEventServices = async (id: string, user: UserType) => {
     },
   });
   return deleteEvent;
+};
+
+//update event
+export const updateEventServices = async (
+  eventId: string,
+  data: updateEvent,
+  user: UserType
+) => {
+  const checkEvent = await prisma.event.findFirst({
+    where: {
+      id: eventId,
+    },
+  });
+  if (!data.category && !data.description && !data.eventdate && !data.name)
+    throw new apiError(400, "no data provided");
+  if (!checkEvent) throw new apiError(404, "event not found");
+  if (checkEvent.userId !== user.id)
+    throw new apiError(400, "can't update others event");
+  const updateEvent = await prisma.event.update({
+    where: {
+      id: eventId,
+    },
+    data,
+  });
+  if (!updateEvent) throw new apiError(500, "error while updating event");
+  return updateEvent;
 };
 
 //getEventByStatus
@@ -237,7 +267,6 @@ export const postEventImageServices = async (
     throw new apiError(401, "can't upload image in others event");
 
   const filePath = file.map((filepath) => filepath.path);
- 
 
   const cloudinaryUploadImages = await Promise.all(
     filePath.map((path) => {
@@ -254,7 +283,46 @@ export const postEventImageServices = async (
   });
 
   filePath.forEach((path) => {
-    fs.unlink(path)
+    fs.unlink(path);
   });
   return uploadImage;
+};
+
+export const deleteEventImagesServices = async (
+  eventImageId: string,
+  user: UserType
+) => {
+  const checkEventImage = await prisma.eventImage.findUnique({
+    where: {
+      id: eventImageId,
+    },
+  });
+  console.log(eventImageId);
+  if (!checkEventImage)
+    throw new apiError(400, "image having this id doesn't exist");
+
+  const checkEventOrganizer = await prisma.event.findUnique({
+    where: {
+      id: checkEventImage?.eventId,
+    },
+  });
+  if (checkEventOrganizer?.userId !== user.id)
+    throw new apiError(401, "can't delete others event's image");
+
+  const cloudinaryRemove = await cloudinaryRemoveImage(
+    checkEventImage.publicId
+  );
+
+  const deleteImage = await prisma.eventImage.delete({
+    where: {
+      id: eventImageId,
+    },
+  });
+  if (!deleteImage)
+    throw new apiError(
+      500,
+      "Internal server error (error while deleting image data)"
+    );
+
+  return deleteImage;
 };

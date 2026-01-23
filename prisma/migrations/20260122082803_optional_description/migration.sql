@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Profile" ALTER COLUMN "description" DROP NOT NULL,
+ALTER COLUMN "profileImgUrl" DROP NOT NULL,
+ALTER COLUMN "publicId" DROP NOT NULL;

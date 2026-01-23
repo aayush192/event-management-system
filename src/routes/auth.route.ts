@@ -3,6 +3,7 @@ import {
   changePasswordController,
   getOtpController,
   loginUserController,
+  refreshAccessTokenController,
   registerUserController,
   resetPasswordController,
   verifyOtpController,
@@ -23,5 +24,6 @@ authRoutes.patch(
 authRoutes.post("/otp", getOtpController);
 authRoutes.post("/verify", verifyOtpController);
 authRoutes.patch("/reset", resetPasswordController);
+authRoutes.patch("/refreshtoken", refreshAccessTokenController);
 
 export default authRoutes;
