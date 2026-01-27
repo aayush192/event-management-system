@@ -3,6 +3,7 @@ import config from "./config/config";
 import router from "./routes";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./utils/globalErrorHandler";
+import "./jobs/otpCleanUp.job";
 
 const app = express();
 app.use(express.json());
