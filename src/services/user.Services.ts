@@ -1,10 +1,10 @@
 import fs from "fs/promises";
 import { prisma } from "../lib/prisma";
 import {
-  updateData,
-  uploadProfile,
-  UserType,
-  updateProfile,
+  createProfileType,
+  updateProfileType,
+  updateUserType,
+  userType,
 } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
 import { checkRoleUtility } from "../utils/roleCheck";
@@ -13,6 +13,23 @@ import {
   cloudianryUploadImage,
   cloudinaryRemoveImage,
 } from "../utils/cloudinary";
+
+export const getMeServices = async (user: userType) => {
+  const getUserData = await prisma.user.findUnique({
+    where: {
+      id: user.id,
+    },
+    include: {
+      registrations: true,
+      profile: true,
+    },
+    omit: {
+      password: true,
+    },
+  });
+
+  return getUserData;
+};
 
 //get user by id
 export const getUserByIdServices = async (id: string) => {
@@ -46,7 +63,7 @@ export const getUserServices = async (page: number, offset: number) => {
 
 export const getRegisteredUserServices = async (
   eventId: string,
-  user: UserType,
+  user: userType,
   page: number,
   offset: number
 ) => {
@@ -82,7 +99,7 @@ export const getRegisteredUserServices = async (
 };
 
 //delete User
-export const deleteUserServices = async (id: string, user: UserType) => {
+export const deleteUserServices = async (id: string, user: userType) => {
   try {
     if (id !== user.id && user.role !== "ADMIN")
       throw new Error(`user is not allowed to delete this account`);
@@ -99,6 +116,9 @@ export const deleteUserServices = async (id: string, user: UserType) => {
       where: {
         id: id,
       },
+      omit: {
+        password: true,
+      },
     });
     console.log(deleteUser);
     return deleteUser;
@@ -107,7 +127,10 @@ export const deleteUserServices = async (id: string, user: UserType) => {
   }
 };
 
-export const updateUserServices = async (user: UserType, data: updateData) => {
+export const updateUserServices = async (
+  user: userType,
+  data: updateUserType
+) => {
   if (!user.id) throw new apiError(401, "user credientals missing");
 
   if (!data.name && !data.email && !data.roleId)
@@ -116,8 +139,6 @@ export const updateUserServices = async (user: UserType, data: updateData) => {
     const checkRole = await checkRoleUtility(data.roleId);
     if (checkRole.role === "admin")
       throw new apiError(403, "admin role is not allowed to choose");
-
-    data.roleId = data.roleId;
   }
   const updateUser = await prisma.user.update({
     where: {
@@ -130,9 +151,9 @@ export const updateUserServices = async (user: UserType, data: updateData) => {
 };
 
 export const setProfileServices = async (
-  data: uploadProfile,
+  data: createProfileType,
   file: Express.Multer.File,
-  user: UserType
+  user: userType
 ) => {
   data.dob = new Date(data.dob);
   console.log("uploading started...");
@@ -146,6 +167,7 @@ export const setProfileServices = async (
         ...data,
         profileImgUrl: cloudinaryUpload.secure_url,
         publicId: cloudinaryUpload.public_id,
+        userId: user.id,
       },
     });
 
@@ -160,11 +182,11 @@ export const setProfileServices = async (
 
 export const updateProfileImageServices = async (
   file: Express.Multer.File,
-  user: UserType
+  user: userType
 ) => {
   console.log();
 
-  if (!file.path) throw new apiError(400, "file path missing");
+  if (!file) throw new apiError(400, "file path missing");
   const profileData = await prisma.profile.findFirst({
     where: {
       userId: user.id,
@@ -198,7 +220,7 @@ export const updateProfileImageServices = async (
   return updateImage;
 };
 
-export const deleteProfileImageServices = async (user: UserType) => {
+export const deleteProfileImageServices = async (user: userType) => {
   const checkProfile = await prisma.profile.findFirst({
     where: {
       userId: user.id,
@@ -223,8 +245,8 @@ export const deleteProfileImageServices = async (user: UserType) => {
 };
 
 export const updateProfileServices = async (
-  data: updateProfile,
-  user: UserType
+  data: updateProfileType,
+  user: userType
 ) => {
   if (!data.description && !data.dob && !data.phoneNo)
     throw new apiError(400, "data is missing");

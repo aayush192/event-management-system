@@ -1,10 +1,8 @@
 import { prisma } from "../lib/prisma";
-import { UserType } from "../dataTypes/dataTypes";
+import { userType } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
 //user registration
-export const userRegistrationServices = async (user: UserType, id: string) => {
-  if (!user && !id) throw new Error("userId or EventId missing");
-
+export const userRegistrationServices = async (user: userType, id: string) => {
   const checkEventStatus = await prisma.event.findUnique({
     where: {
       id: id,
@@ -25,13 +23,11 @@ export const userRegistrationServices = async (user: UserType, id: string) => {
 };
 
 //user unregistration
-export const userUnregistrationServices = async (
-  user: UserType,
+export const deleteUserRegistrationServices = async (
+  user: userType,
   id: string
 ) => {
-  if (!user && !id) throw new apiError(400, "userId or EventId missing");
-
-  const userUnregistration = await prisma.registration.delete({
+  const deleteUserRegistration = await prisma.registration.delete({
     where: {
       userId_eventId: {
         userId: user.id,
@@ -39,14 +35,15 @@ export const userUnregistrationServices = async (
       },
     },
   });
-  console.log(userUnregistration);
-  return userUnregistration;
+  if (!deleteUserRegistration)
+    throw new apiError(500, "failed to delete user registration");
+  return deleteUserRegistration;
 };
 
 //get event registered
 export const getRegisteredEventServices = async (
   userId: string,
-  user: UserType,
+  user: userType,
   page: number,
   offset: number
 ) => {
@@ -62,6 +59,7 @@ export const getRegisteredEventServices = async (
     },
     include: { event: true },
   });
-  console.log(getRegisteredEvent);
+  if (!getRegisteredEvent)
+    throw new apiError(500, "failed to get registered event");
   return getRegisteredEvent;
 };

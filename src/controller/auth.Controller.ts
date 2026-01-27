@@ -10,80 +10,59 @@ import {
   verifyOtpServices,
 } from "../services/auth.Services";
 import {
-  registerData,
-  loginData,
-  changePasswordData,
-  getOtpData,
-  VerifyOtpData,
-  resetPasswordData,
+  changePasswordType,
+  getOtpType,
+  loginType,
+  registerUserType,
+  resetPasswordType,
+  verifyOtpType,
 } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
+import { resHandler } from "../utils/responseHandler";
 
 export const registerUserController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data: registerData = req.body;
-    const user = await authRegisterServices(data);
-    if (!user) throw new Error("error while registering user");
-    res.status(201).json({
-      success: true,
-      data: user,
-      message: "user registered successfully",
-    });
+    const data: registerUserType = req.body;
+    const info = await authRegisterServices(data);
+    resHandler(res, 201, true, "user registered successfully", info);
   }
 );
 
 export const loginUserController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data: loginData = req.body;
-    const user = await authLoginServices(data);
-    if (!user) throw new apiError(404, `can't find user having this email`);
-    res
-      .status(200)
-      .json({ success: true, message: `user login successful`, data: user });
+    const data: loginType = req.body;
+    const info = await authLoginServices(data);
+    return resHandler(res, 200, true, "user logged in successfully", info);
   }
 );
 export const changePasswordController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data: changePasswordData = req.body;
-    const user = await changePasswordServices(data);
-    res.status(200).json({
-      success: true,
-      message: `password changed successfully`,
-      data: user,
-    });
+    const user = req.user!;
+    const data: changePasswordType = req.body;
+    const info = await changePasswordServices(user, data);
+    return resHandler(res, 200, true, "password changed successfully", info);
   }
 );
-export const getOtpController = asyncHandler(
+export const getEmailController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user: getOtpData = req.body;
+    const user: getOtpType = req.body;
     const info = await getOtpServices(user.email);
-    res.status(200).json({
-      success: true,
-      message: `otp send successfully`,
-      data: info,
-    });
+    return resHandler(res, 200, true, "send email successfully");
   }
 );
 export const verifyOtpController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user: VerifyOtpData = req.body;
+    const user: verifyOtpType = req.body;
     const info = await verifyOtpServices(user.otp, user.email);
-    res.status(200).json({
-      success: true,
-      message: `otp verified successfully`,
-      data: info,
-    });
+    return resHandler(res, 200, true, "otp verified successfully", info);
   }
 );
 export const resetPasswordController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user: resetPasswordData = req.body;
-    const info = await resetPasswordServices(user.token, user.newPassword);
-    res.status(200).json({
-      success: true,
-      message: `otp verified successfully`,
-      data: info,
-    });
+    const token = req.query.token;
+    const user: resetPasswordType = req.body;
+    const info = await resetPasswordServices(token as string, user.newPassword);
+    return resHandler(res, 200, true, "password changed successfully", info);
   }
 );
 
@@ -92,10 +71,8 @@ export const refreshAccessTokenController = asyncHandler(
   async (req: Request, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) throw new apiError(400, "missing refresh token");
-    const data = await refreshAccessTokenServices(refreshToken);
+    const info = await refreshAccessTokenServices(refreshToken);
 
-    res
-      .status(201)
-      .json({ success: true, message: "token refreshed successfully", data });
+    return resHandler(res, 200, true, "token refreshed successfully", info);
   }
 );

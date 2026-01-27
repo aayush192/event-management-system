@@ -1,24 +1,31 @@
 import nodemailer from "nodemailer";
-
+import apiError from "./apiError";
+import config from "../config/config";
 const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
-  secure: false,
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
-    user: `aiden.nitzsche@ethereal.email`,
-    pass: `1wbeydGHb2h1pqdAvF`,
+    user: config.EMAIL,
+    pass: config.PASSWORD,
   },
 });
 
-export const sendMail = async (email: string, date: Date, otp: string) => {
-  const info = await transporter.sendMail({
-    from: `aiden.nitzsche@ethereal.email`,
-    to: `${email}`,
-    subject: `opt for password`,
-    text: `Your OTP is ${otp}.
-It is valid for 5 minutes.
-Do not share this code with anyone.`,
-  });
+export const sendMail = async (
+  email: string,
+  subject: string,
+ html:string
+) => {
+  try {
+      const info = await transporter.sendMail({
+        from: config.EMAIL,
+        to: email,
+        subject: subject,
+        html:html
+      });
+      return info;
 
-  return info;
+  } catch (err) {
+    throw new apiError(500, `${err}`);
+  }
 };

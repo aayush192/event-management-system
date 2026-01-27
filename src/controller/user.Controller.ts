@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import {
   deleteProfileImageServices,
   deleteUserServices,
+  getMeServices,
   getRegisteredUserServices,
   getUserByIdServices,
   getUserServices,
@@ -12,28 +13,29 @@ import {
 } from "../services/user.Services";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
-  searchEventType,
-  updateData,
-  updateProfile,
-  uploadProfile,
-  UserType,
+  createProfileType,
+  updateProfileType,
+  updateUserType,
+  userSchema,
+  userType,
 } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
 import multer from "multer";
+import { resHandler } from "../utils/responseHandler";
 
 //get user by id
 export const getUserByIdController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    if (!id) throw new apiError(401, "user data missing");
-    const getUserById = await getUserByIdServices(id as string);
-    if (!getUserById) throw new apiError(404, "user data missing");
+    const { userId } = req.params;
+    const getUserById = await getUserByIdServices(userId as string);
 
-    return res.status(200).json({
-      success: true,
-      message: `user data retrived successfully`,
-      data: getUserById,
-    });
+    return resHandler(
+      res,
+      200,
+      true,
+      "user retrived successfully",
+      getUserById
+    );
   }
 );
 
@@ -41,16 +43,17 @@ export const getUserController = asyncHandler(
   async (req: Request, res: Response) => {
     const page = req.query.page || 1;
     const offset = req.query.offset || 15;
-
     const getUser = await getUserServices(Number(page), Number(offset));
 
-    if (!getUser) throw new apiError(404, "user data not available");
+    return resHandler(res, 200, true, "user retrived successfully", getUser);
+  }
+);
 
-    return res.status(200).json({
-      success: true,
-      message: `user data retrived successfully`,
-      data: getUser,
-    });
+export const getMeController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const getOwnData = await getMeServices(req.user!);
+
+    return resHandler(res, 200, true, "retrived own data successfully", getOwnData);
   }
 );
 
@@ -60,118 +63,91 @@ export const getRegisteredUserController = asyncHandler(
     const page = Number(req.query.page) || 1;
     const offset = Number(req.query.offset) || 15;
 
-    if (!req.user) throw new apiError(401, `user data not available`);
-    const user = req.user;
+    const user = req.user!;
     const getRegisteredUser = await getRegisteredUserServices(
       eventId as string,
       user,
       page,
       offset
     );
-    if (!getRegisteredUser) throw new apiError(404, `user not available`);
 
-    res.status(200).json({
-      success: true,
-      message: "registered user retrived successfully",
-      data: getRegisteredUser,
-    });
+    return resHandler(
+      res,
+      200,
+      true,
+      "user retrived successfully",
+      getRegisteredUser
+    );
   }
 );
 
 //delete user controller
 export const deleteUserController = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    if (!req.user) throw new apiError(401, `user data missing`);
-    if (!id) throw new apiError(401, `id not available`);
-    const user = req.user;
-    const deleteUser = await deleteUserServices(id as string, user);
-    if (!deleteUser) throw new apiError(500, `problem while deleting user`);
+    const { userId } = req.params;
+    const user = req.user!;
+    const deleteUser = await deleteUserServices(userId as string, user);
 
-    const { password, ...userData } = deleteUser;
-    res.status(200).json({
-      success: true,
-      message: "user deleted successfully",
-      data: userData,
-    });
+    return resHandler(res, 204, true, "user deleted successfully");
   }
 );
 
 //update user controller
 export const updateUserController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userdata: updateData = req.body;
-    if (!req.user) throw new apiError(401, `user credintials not available`);
-    const user: UserType = req.user;
+    const userdata: updateUserType = req.body;
+    const user = req.user!;
     const updateUser = await updateUserServices(user, userdata);
-    return res.status(200).json({
-      success: true,
-      message: "user updated successfully",
-      data: updateUser,
-    });
+    return resHandler(res, 200, true, "user updated successfully");
   }
 );
 
-export const setProfileController = asyncHandler(
+export const createProfileController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data: uploadProfile = req.body;
+    const data: createProfileType = req.body;
     if (!req.file) throw new apiError(401, `image not uploaded`);
     const file: Express.Multer.File = req.file;
-    if (!req.user) throw new apiError(401, `user data missing`);
-    const user: UserType = req.user;
+
+    const user = req.user!;
     console.log(user);
 
     const setProfile = await setProfileServices(data, file, user);
 
-    res.status(201).json({
-      success: true,
-      message: "created profile successfully",
-      data: setProfile,
-    });
+    return resHandler(
+      res,
+      201,
+      true,
+      "created profile succcessfully",
+      setProfile
+    );
   }
 );
 export const updateProfileImageController = asyncHandler(
   async (req: Request, res: Response) => {
     if (!req.file) throw new apiError(401, `image not uploaded`);
-    const file: Express.Multer.File = req.file;
-    if (!req.user) throw new apiError(401, `user data missing`);
-    const user: UserType = req.user;
-    console.log(user);
+   const file: Express.Multer.File = req.file;
+    const user = req.user!;
 
     const updateProfileImage = await updateProfileImageServices(file, user);
 
-    res.status(201).json({
-      success: true,
-      message: "updated profile successfully",
-      data: updateProfileImage,
-    });
+    return resHandler(res, 200, true, "updated profile image successfully");
   }
 );
 export const deleteProfileImageController = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new apiError(401, `user data missing`);
-    const user: UserType = req.user;
+    const user = req.user!;
 
     const deleteProfileImage = await deleteProfileImageServices(user);
 
-    res.status(201).json({
-      success: true,
-      message: "deleted profile successfully",
-      data: deleteProfileImage,
-    });
+    return resHandler(res, 204, true, "deleted profile image successfully");
   }
 );
 
 export const updateProfileController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data: updateProfile = req.body;
-    if (!req.user) throw new apiError(401, `user data missing`);
-    const user = req.user;
+    const data: updateProfileType = req.body;
+    const user = req.user!;
     const updateProfile = await updateProfileServices(data, user);
-    res.status(200).json({
-      success: true,
-      message: `profile updated successfully`,
-      data: updateProfile,
-    });
+    return resHandler(res,200,true,"profile updated successfully",updateProfile)
   }
 );

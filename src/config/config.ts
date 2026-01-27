@@ -14,4 +14,7 @@ export default {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_SECRET: process.env.CLOUDINARY_API_SECRET,
+
+  EMAIL: process.env.EMAIL,
+  PASSWORD: process.env.PASSWORD,
 };

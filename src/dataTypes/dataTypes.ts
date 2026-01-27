@@ -1,8 +1,8 @@
-import z, { date } from "zod";
+import z, { date, optional } from "zod";
 import { omit } from "zod/v4/core/util.cjs";
 
-const data = z.object({
-  name: z.string(),
+export const createEventSchema = z.object({
+  name: z.string().min(1, { message: "you must provide a name" }),
   description: z.string(),
   eventdate: z.date(),
   category: z.enum([
@@ -18,148 +18,138 @@ const data = z.object({
   ]),
 });
 
-const searchEvent = z
-  .object({
-    name: z.string(),
-    category: z.enum([
-      "CONFERENCE",
-      "WORKSHOP",
-      "MEETUP",
-      "WEBINAR",
-      "SEMINAR",
-      "SOCIAL",
-      "SPORTS",
-      "MUSIC",
-      "OTHER",
-    ]),
-    eventdate: z.date(),
-  })
-  .partial();
+export const searchEventSchema = createEventSchema
+  .omit({ description: true })
+  .extend({
+    page: z.coerce.number().int(),
+    offset: z.coerce.number().int(),
+  });
 
-const updateEventStatus = z.object({
+export const updateEventStatusSchema = z.object({
   id: z.string(),
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
 });
 
-const userDataType = z.object({
+export const userSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string(),
   role: z.string(),
-  roleId: z.string(),
-});
-const userLoginType = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  roleId: z.string(),
-  password: z.string(),
 });
 
-const registerdata = z.object({
-  name: z.string(),
-  email: z.string(),
-  roleId: z.string(),
-  password: z.string(),
+export const paginationSchema = z.object({
+  page: z.coerce.number().int(),
+  offset: z.coerce.number().int(),
 });
 
-const logindata = z.object({
-  email: z.email(),
-  password: z.string(),
+export const registerUserSchema = userSchema.extend({
+  password: z
+    .string()
+    .min(8, { message: "password must contain 8 characters" }),
 });
 
-const updateUser = z.object({
+export const loginSchema = userSchema
+  .omit({
+    id: true,
+    name: true,
+    role: true,
+  })
+  .extend({
+    password: z.string().min(8, { message: "password must have 8 characters" }),
+  });
+
+export const updateUserSchema = z.object({
   name: z.string().optional(),
   email: z.string().optional(),
   roleId: z.string().optional(),
 });
 
-const changePasswordData = z.object({
-  email: z.string(),
+export const changePasswordSchema = z.object({
   old_password: z.string(),
   new_password: z.string(),
 });
 
-const verifyOtpData = z.object({
+export const verifyOtpSchema = z.object({
   otp: z.string(),
   email: z.string(),
 });
 
-const resetTokenData = z.object({
+export const getOtpSchema = verifyOtpSchema.omit({ otp: true });
+
+export const resetTokenSchema = z.object({
   email: z.string(),
   payloadType: z.string(),
 });
 
-const resetPasswordData = z.object({
-  token: z.string(),
+export const resetPasswordSchema = z.object({
   newPassword: z.string(),
 });
 
-const uploadProfile = z.object({
+export const createProfileSchema = z.object({
   dob: z.date(),
   phoneNo: z.string(),
   description: z.string().optional(),
   userId: z.string(),
 });
 
-const updateProfile = z.object({
+export const updateProfileSchema = z.object({
   dob: z.date().optional(),
   phoneNo: z.string().optional(),
   description: z.string().optional(),
 });
 
-const refreshTokenType = z.object({
+export const statusSchema = z.object({
+  status: z.enum(["APPROVED", "PENDING", "REJECTED"]),
+});
+
+export const userIdSchema = z.object({
+  userId: z.uuid("uuid invalid"),
+});
+export const eventIdSchema = z.object({
+  eventId: z.uuid("uuid invalid"),
+});
+export const eventImageIdSchema = z.object({
+  eventImageId: z.uuid("uuid invalid"),
+});
+
+export const refreshTokenSchema = z.object({
   id: z.string(),
 });
 
-export const updateEvent = z.object({
-  name: z.string().optional(),
-  description: z.string().optional(),
-  eventdate: z.string().optional(),
-  category: z.enum([
-    "CONFERENCE",
-    "WORKSHOP",
-    "MEETUP",
-    "WEBINAR",
-    "SEMINAR",
-    "SOCIAL",
-    "SPORTS",
-    "MUSIC",
-    "OTHER",
-  ]),
-});
-export type Data = z.infer<typeof data>;
+export const updateEventSchema = createEventSchema
+  .extend({ id: z.string() })
+  .partial({ name: true, description: true, eventdate: true, category: true });
 
-export type searchEventType = z.infer<typeof searchEvent>;
+export type createEventType = z.infer<typeof createEventSchema>;
 
-export type updateEventData = z.infer<typeof updateEventStatus>;
+export type searchEventType = z.infer<typeof searchEventSchema>;
 
-export type updateEvent = z.infer<typeof updateEvent>;
+export type updateEventStatusType = z.infer<typeof updateEventStatusSchema>;
 
-export type Status = "PENDING" | "APPROVED" | "REJECTED";
+export type updateEventType = z.infer<typeof updateEventSchema>;
 
-export type UserType = z.infer<typeof userDataType>;
+export type status = "PENDING" | "APPROVED" | "REJECTED";
 
-export type userLoginType = z.infer<typeof userLoginType>;
+export type userType = z.infer<typeof userSchema>;
 
-export type registerData = z.infer<typeof registerdata>;
+export type registerUserType = z.infer<typeof registerUserSchema>;
 
-export type loginData = z.infer<typeof logindata>;
+export type loginType = z.infer<typeof loginSchema>;
 
-export type updateData = z.infer<typeof updateUser>;
+export type updateUserType = z.infer<typeof updateUserSchema>;
 
-export type changePasswordData = z.infer<typeof changePasswordData>;
+export type changePasswordType = z.infer<typeof changePasswordSchema>;
 
-export type VerifyOtpData = z.infer<typeof verifyOtpData>;
+export type verifyOtpType = z.infer<typeof verifyOtpSchema>;
 
-export type getOtpData = Omit<VerifyOtpData, "otp">;
+export type getOtpType = z.infer<typeof getOtpSchema>;
 
-export type resetTokenData = z.infer<typeof resetTokenData>;
+export type resetTokenType = z.infer<typeof resetTokenSchema>;
 
-export type refreshTokenData = z.infer<typeof refreshTokenType>;
+export type refreshTokenType = z.infer<typeof refreshTokenSchema>;
 
-export type resetPasswordData = z.infer<typeof resetPasswordData>;
+export type resetPasswordType = z.infer<typeof resetPasswordSchema>;
 
-export type uploadProfile = z.infer<typeof uploadProfile>;
+export type createProfileType = z.infer<typeof createProfileSchema>;
 
-export type updateProfile = z.infer<typeof updateProfile>;
+export type updateProfileType = z.infer<typeof updateProfileSchema>;

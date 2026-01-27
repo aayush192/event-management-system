@@ -2,10 +2,11 @@ import express from "express";
 import {
   deleteProfileImageController,
   deleteUserController,
+  getMeController,
   getRegisteredUserController,
   getUserByIdController,
   getUserController,
-  setProfileController,
+  createProfileController,
   updateProfileController,
   updateProfileImageController,
   updateUserController,
@@ -14,18 +15,39 @@ import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 import { updateUserServices } from "../services/user.Services";
 import { upload } from "../middleWares/multer";
+import {
+  validateBody,
+  validateParams,
+  validateQuery,
+} from "../middleWares/validate";
+import {
+  createProfileSchema,
+  eventIdSchema,
+  paginationSchema,
+  updateProfileSchema,
+  updateUserSchema,
+  userIdSchema,
+} from "../dataTypes/dataTypes";
 const userRoutes = express.Router();
 
 userRoutes.get(
   "/user",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN"),
+  validateQuery(paginationSchema),
   getUserController
 );
 userRoutes.get(
-  "/user/:id",
+  "/user/me",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "USER", "ORGANIZER"),
+  getMeController
+);
+userRoutes.get(
+  "/user/:userId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN"),
+  validateParams(userIdSchema),
   getUserByIdController
 );
 
@@ -33,6 +55,8 @@ userRoutes.get(
   "/user/registered/:eventId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
+  validateParams(eventIdSchema),
+  validateQuery(paginationSchema),
   getRegisteredUserController
 );
 
@@ -40,6 +64,7 @@ userRoutes.patch(
   "/user/update",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  validateBody(updateUserSchema),
   updateUserController
 );
 
@@ -47,8 +72,9 @@ userRoutes.post(
   "/user/profile",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  validateBody(createProfileSchema),
   upload.single("image"),
-  setProfileController
+  createProfileController
 );
 userRoutes.patch(
   "/user/update/image",
@@ -61,6 +87,7 @@ userRoutes.patch(
   "/user/update/profile",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  validateBody(updateProfileSchema),
   updateProfileController
 );
 userRoutes.delete(
@@ -71,9 +98,10 @@ userRoutes.delete(
 );
 
 userRoutes.delete(
-  "/user/delete/:id",
+  "/user/delete/:userId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  validateParams(userIdSchema),
   deleteUserController
 );
 

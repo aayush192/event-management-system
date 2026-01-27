@@ -1,0 +1,59 @@
+const getPagination = ({
+  page = 1,
+  pageSize = 10,
+  maxPageSize = 50,
+}) => {
+  const take = Math.min(Number(pageSize), maxPageSize);
+  const currentPage = Math.max(Number(page), 1);
+  const skip = (currentPage - 1) * take;
+
+  return { skip, take, currentPage };
+};
+
+module.exports = getPagination;
+
+
+const express = require("express");
+const prisma = require("../lib/prisma");
+const getPagination = require("../utils/pagination");
+
+const router = express.Router();
+
+router.get("/", async (req, res) => {
+  try {
+    const { page, pageSize } = req.query;
+
+    const { skip, take, currentPage } = getPagination({
+      page,
+      pageSize,
+    });
+
+    const [items, totalCount] = await prisma.$transaction([
+      prisma.media.findMany({
+        skip,
+        take,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.media.count(),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / take);
+
+    res.json({
+      data: items,
+      pagination: {
+        page: currentPage,
+        pageSize: take,
+        totalCount,
+        totalPages,
+        hasNext: currentPage < totalPages,
+        hasPrev: currentPage > 1,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch media" });
+  }
+});
+
+module.exports = router;

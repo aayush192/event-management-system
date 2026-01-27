@@ -7,7 +7,7 @@ interface userData {
   id: string;
   name: string;
   email: string;
-  roleId: string;
+  role: string;
 }
 
 export const verifyTokenMiddleWare = async (
@@ -15,7 +15,7 @@ export const verifyTokenMiddleWare = async (
   res: Response,
   next: NextFunction
 ) => {
-  const authheader = await req.headers.authorization;
+  const authheader = req.headers.authorization;
   try {
     if (!authheader || !authheader.startsWith("Bearer")) {
       return res.status(401).json({ success: false, message: "unauthorized" });
@@ -28,12 +28,7 @@ export const verifyTokenMiddleWare = async (
     const data = jwt.verify(token, config.JWT_SECRET) as userData;
     console.log(data);
 
-    const checkrole = await checkRoleUtility(data.roleId);
-
-    req.user = {
-      ...data,
-      role: checkrole.role,
-    };
+    req.user = data;
 
     next();
   } catch (error) {

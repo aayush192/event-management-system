@@ -2,12 +2,12 @@ import { prisma } from "../lib/prisma";
 import fs from "fs/promises";
 import apiError from "../utils/apiError";
 import {
-  Data,
-  Status,
-  updateEventData,
-  UserType,
+  createEventType,
   searchEventType,
-  updateEvent,
+  status,
+  updateEventStatusType,
+  updateEventType,
+  userType,
 } from "../dataTypes/dataTypes";
 import {
   cloudianryUploadImage,
@@ -21,7 +21,7 @@ export const getEventServices = async (
   page: number,
   offset: number,
   SearchValue: searchEventType,
-  user: UserType
+  user: userType
 ) => {
   const skip = (page - 1) * offset;
 
@@ -60,7 +60,7 @@ export const getEventServices = async (
         eventImage: true,
       },
     });
-    if (!searchEvent) throw new apiError(502, "can't get event");
+    if (searchEvent.length === 0) throw new apiError(400, "failed get event");
     return searchEvent;
   }
   const searchEvent = await prisma.event.findMany({
@@ -70,13 +70,13 @@ export const getEventServices = async (
       eventImage: true,
     },
   });
-  if (!searchEvent) throw new apiError(502, "can't get event");
+  if (searchEvent.length === 0) throw new apiError(400, "failed get event");
   return searchEvent;
 };
 
-//pst event
+//post event
 export const postEventServices = async (
-  data: Data,
+  data: createEventType,
   file: Express.Multer.File,
   userId: string
 ) => {
@@ -95,13 +95,13 @@ export const postEventServices = async (
     },
   });
 
-  if (!event) throw new apiError(500, "error while adding event");
+  if (!event) throw new apiError(500, "failed to add event");
   fs.unlink(file.path);
   return event;
 };
 
 //update event status
-export const updateEventStatus = async (data: updateEventData) => {
+export const updateEventStatus = async (data: updateEventStatusType) => {
   const updateEvent = await prisma.event.update({
     where: {
       id: data.id,
@@ -110,22 +110,24 @@ export const updateEventStatus = async (data: updateEventData) => {
       status: data.status,
     },
   });
+
+  if (!updateEvent) throw new apiError(500, "failed to event");
   return updateEvent;
 };
 
 //delete event
-export const deleteEventServices = async (id: string, user: UserType) => {
+export const deleteEventServices = async (id: string, user: userType) => {
   const checkEvent = await prisma.event.findFirst({
     where: {
       id: id,
     },
   });
-  if (!checkEvent) throw new apiError(400, `doesn't have given event`);
+  if (!checkEvent) throw new apiError(400, `event not found`);
   if (user.role === "ORGANIZER") {
     if (user.id !== checkEvent?.userId)
-      throw new Error(`this event is not organized by ${user.name}`);
+      throw new apiError(401, `this event is not organized by ${user.name}`);
   }
-  const deleteCoverImage = await cloudinaryRemoveImage(checkEvent.publicId);
+  await cloudinaryRemoveImage(checkEvent.publicId);
 
   const getImagePublicKey = await prisma.eventImage.findMany({
     select: {
@@ -136,25 +138,25 @@ export const deleteEventServices = async (id: string, user: UserType) => {
     },
   });
   if (getImagePublicKey.length !== 0) {
-    const deleteImage = await cloudinaryRemoveMultipleImage(
+    await cloudinaryRemoveMultipleImage(
       getImagePublicKey as [{ publicId: string }]
     );
-    if (!deleteImage)
-      throw new apiError(500, "failed to delete iamge(cloudinary)");
   }
   const deleteEvent = await prisma.event.delete({
     where: {
       id: id,
     },
   });
+  throw new apiError(500, "failed to delete event");
+
   return deleteEvent;
 };
 
 //update event
 export const updateEventServices = async (
   eventId: string,
-  data: updateEvent,
-  user: UserType
+  data: updateEventType,
+  user: userType
 ) => {
   const checkEvent = await prisma.event.findFirst({
     where: {
@@ -172,13 +174,13 @@ export const updateEventServices = async (
     },
     data,
   });
-  if (!updateEvent) throw new apiError(500, "error while updating event");
+  if (!updateEvent) throw new apiError(500, "failed to update event");
   return updateEvent;
 };
 
 //getEventByStatus
 export const getEventByStatusServices = async (
-  status: Status,
+  status: status,
   page: number,
   offset: number
 ) => {
@@ -193,7 +195,6 @@ export const getEventByStatusServices = async (
       eventImage: true,
     },
   });
-
   if (getEventByStatus.length === 0) {
     throw new apiError(400, `event of this status not available`);
   }
@@ -205,31 +206,27 @@ export const getApprovedEventServices = async (
   page: number,
   offset: number
 ) => {
-  try {
-    const skip = (page - 1) * offset;
-    const getApprovedEvent = await prisma.event.findMany({
-      skip,
-      take: offset,
-      where: {
-        status: "APPROVED",
-      },
-      include: {
-        eventImage: true,
-      },
-    });
+  const skip = (page - 1) * offset;
+  const getApprovedEvent = await prisma.event.findMany({
+    skip,
+    take: offset,
+    where: {
+      status: "APPROVED",
+    },
+    include: {
+      eventImage: true,
+    },
+  });
 
-    if (getApprovedEvent.length === 0) {
-      throw new Error(`event of this status not available`);
-    }
-    return getApprovedEvent;
-  } catch (error) {
-    throw new Error(`internal server error: ${error}`);
+  if (getApprovedEvent.length === 0) {
+    throw new apiError(400, `event of this status not available`);
   }
+  return getApprovedEvent;
 };
 
 //organized Event
 export const getOrganizedEventServices = async (
-  user: UserType,
+  user: userType,
   userId: string
 ) => {
   if (user.role === "ORGANIZER" && userId !== user.id)
@@ -242,8 +239,7 @@ export const getOrganizedEventServices = async (
       eventImage: true,
     },
   });
-  if (!getOrganizedEvent) throw new Error(`error while retriving event`);
-  else if (getOrganizedEvent.length === 0)
+  if (getOrganizedEvent.length === 0)
     throw new apiError(400, `doesn't have any organized event`);
 
   return getOrganizedEvent;
@@ -251,7 +247,7 @@ export const getOrganizedEventServices = async (
 
 //postEventImage
 export const postEventImageServices = async (
-  user: UserType,
+  user: userType,
   file: Express.Multer.File[],
   eventId: string
 ) => {
@@ -281,7 +277,15 @@ export const postEventImageServices = async (
   const uploadImage = await prisma.eventImage.createMany({
     data: imageData,
   });
-
+  if (!uploadImage) {
+    for (const image of imageData) {
+      await cloudinaryRemoveImage(image.publicId);
+    }
+    filePath.forEach((path) => {
+      fs.unlink(path);
+    });
+    throw new apiError(500, "failed to add event image");
+  }
   filePath.forEach((path) => {
     fs.unlink(path);
   });
@@ -290,14 +294,14 @@ export const postEventImageServices = async (
 
 export const deleteEventImagesServices = async (
   eventImageId: string,
-  user: UserType
+  user: userType
 ) => {
   const checkEventImage = await prisma.eventImage.findUnique({
     where: {
       id: eventImageId,
     },
   });
-  console.log(eventImageId);
+
   if (!checkEventImage)
     throw new apiError(400, "image having this id doesn't exist");
 
@@ -308,21 +312,14 @@ export const deleteEventImagesServices = async (
   });
   if (checkEventOrganizer?.userId !== user.id)
     throw new apiError(401, "can't delete others event's image");
-
-  const cloudinaryRemove = await cloudinaryRemoveImage(
-    checkEventImage.publicId
-  );
+  await cloudinaryRemoveImage(checkEventImage.publicId);
 
   const deleteImage = await prisma.eventImage.delete({
     where: {
       id: eventImageId,
     },
   });
-  if (!deleteImage)
-    throw new apiError(
-      500,
-      "Internal server error (error while deleting image data)"
-    );
+  if (!deleteImage) throw new apiError(500, "failed to delete image");
 
   return deleteImage;
 };

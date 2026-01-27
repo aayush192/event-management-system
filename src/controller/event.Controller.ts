@@ -13,26 +13,27 @@ import {
 } from "../services/event.Services";
 import apiError from "../utils/apiError";
 import {
-  Data,
-  updateEventData,
-  UserType,
-  Status,
+  updateEventStatusType,
+  status,
   searchEventType,
-  updateEvent,
+  updateEventType,
+  createEventType,
 } from "../dataTypes/dataTypes";
 import { asyncHandler } from "../utils/asyncHandler";
+import { resHandler } from "../utils/responseHandler";
 
 //get event
 export const getEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new apiError(401, `user data missing`);
-    const user = req.user;
+    const user = req.user!;
     const searchValue = {
       name: req.query?.name,
       category: req.query?.category
         ? String(req.query.category).toUpperCase()
         : undefined,
-      eventdate: req.query?.eventdate,
+      eventdate: req.query?.eventdate
+        ? new Date(String(req.query.eventdate))
+        : undefined,
     };
     const page = req.query.page || 1;
     const offset = req.query.offset || 15;
@@ -43,44 +44,35 @@ export const getEventController = asyncHandler(
       searchValue as searchEventType,
       user
     );
-    return res.status(200).json({
-      success: true,
-      message: `search event retrived successfully`,
-      data: searchEvent,
-    });
+    return resHandler(
+      res,
+      200,
+      true,
+      "event retrived successfully",
+      searchEvent
+    );
   }
 );
 
 export const postEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data: Data = req.body;
-    if (!req.user?.id) throw new apiError(401, "user data missing");
-    const userId = req.user.id;
+    const data: createEventType = req.body;
+    const userId = req.user!.id;
     if (!req.file) throw new apiError(400, "cover image missing");
 
     const file = req.file;
     const event = await postEventServices(data, file, userId);
-    if (!event) throw new apiError(500, "error while creating an event");
-    return res.status(201).json({
-      success: true,
-      message: "event created successfully",
-      data: event,
-    });
+
+    return resHandler(res, 201, true, "post created Successfully", event);
   }
 );
 
 export const updateEventStatusController = asyncHandler(
   async (req: Request, res: Response) => {
-    const data: updateEventData = req.body;
-    if (!data) throw new apiError(400, "data missing");
+    const data: updateEventStatusType = req.body;
     const updateEvent = await updateEventStatus(data);
-    if (!updateEvent) throw new apiError(500, "error while updating status");
 
-    return res.status(200).json({
-      success: true,
-      message: `status updated successfully`,
-      data: updateEvent,
-    });
+    return resHandler(res, 200, true, "status of the event successfully",updateEvent);
   }
 );
 
@@ -88,18 +80,11 @@ export const updateEventStatusController = asyncHandler(
 
 export const deleteEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = req.user;
-    const { id } = req.params;
-    if (!user) throw new apiError(401, "user data missing");
-    const deleteEvent = await deleteEventServices(id as string, user);
+    const user = req.user!;
+    const { eventId } = req.params;
+    const deleteEvent = await deleteEventServices(eventId as string, user);
 
-    if (!deleteEvent) throw new apiError(500, "error while deleting event");
-
-    return res.status(200).json({
-      success: true,
-      message: `event deleted successfully`,
-      data: deleteEvent,
-    });
+    return resHandler(res, 204, true, "event deleted successfully");
   }
 );
 
@@ -116,15 +101,11 @@ export const getEventByStatusController = asyncHandler(
         }
       : status.toUpperCase();
     const getEventByStatus = await getEventByStatusServices(
-      upperCaseStatus as Status,
+      upperCaseStatus as status,
       Number(page),
       Number(offset)
     );
-    return res.status(200).json({
-      success: true,
-      message: "event retrived successfully",
-      data: getEventByStatus,
-    });
+    resHandler(res, 200, true, "event retrived successfully", getEventByStatus);
   }
 );
 
@@ -137,11 +118,7 @@ export const getApprovedEventController = asyncHandler(
       Number(page),
       Number(offset)
     );
-    return res.status(200).json({
-      success: true,
-      message: "event retrived successfully",
-      data: getApprovedEvent,
-    });
+    return resHandler(res, 200, true, "event retrived successfully");
   }
 );
 
@@ -149,31 +126,25 @@ export const getApprovedEventController = asyncHandler(
 export const getOrganizedEventcontroller = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    if (!req.user) throw new apiError(401, `user data missing`);
-    const user = req.user;
+    const user = req.user!;
     const getOrganizedEvent = await getOrganizedEventServices(
       user,
       userId as string
     );
-    if (!getOrganizedEvent)
-      throw new apiError(500, `can't get organized events`);
-
-    if (getOrganizedEvent.length === 0)
-      throw new apiError(404, `doesn't have any organized events`);
-
-    return res.status(200).json({
-      success: true,
-      message: `retrived organized by organizer ${userId}`,
-      data: getOrganizedEvent,
-    });
+    return resHandler(
+      res,
+      200,
+      true,
+      "event retrived successfully",
+      getOrganizedEvent
+    );
   }
 );
 
 export const postEventImagesController = asyncHandler(
   async (req: Request, res: Response) => {
     const { eventId } = req.params;
-    if (!req.user) throw new apiError(400, "user data missing");
-    const user = req.user;
+    const user = req.user!;
 
     if (!req.files) throw new apiError(400, "filepath missing");
     const files = req.files;
@@ -184,33 +155,36 @@ export const postEventImagesController = asyncHandler(
       eventId as string
     );
 
-    return res.status(201).json({
-      success: true,
-      message: "uploaded successfully",
-      data: eventImage,
-    });
+    return resHandler(
+      res,
+      201,
+      true,
+      "event image added successfully",
+      eventImage
+    );
   }
 );
 
 //update event
 export const updateEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new apiError(401, "user data missing");
-    const user = req.user;
+    const user = req.user!;
     const { eventId } = req.params;
     if (Array.isArray(eventId))
       throw new apiError(400, "eventId can't be in array");
     const data = req.body;
     const updateEvent = await updateEventServices(
       eventId,
-      data as updateEvent,
+      data as updateEventType,
       user
     );
-    return res.status(200).json({
-      success: true,
-      message: "event updated succesfully",
-      data: updateEvent,
-    });
+    return resHandler(
+      res,
+      200,
+      true,
+      "event updated successfully",
+      updateEvent
+    );
   }
 );
 
@@ -221,17 +195,12 @@ export const deleteEventImagesController = asyncHandler(
     if (Array.isArray(eventImageId))
       throw new apiError(400, "params shouldn't be an array");
     console.log(eventImageId);
-    if (!req.user) throw new apiError(401, "user data missing ");
-    const user = req.user;
+    const user = req.user!;
     const deleteEventImage = await deleteEventImagesServices(
       eventImageId,
       user
     );
 
-    return res.status(200).json({
-      success: false,
-      message: "image deleted successfully",
-      data: deleteEventImage,
-    });
+    return resHandler(res, 204, true, "event image deleted successfully");
   }
 );
