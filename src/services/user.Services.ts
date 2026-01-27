@@ -13,6 +13,7 @@ import {
   cloudianryUploadImage,
   cloudinaryRemoveImage,
 } from "../utils/cloudinary";
+import { pagination } from "../utils/pagination";
 
 export const getMeServices = async (user: userType) => {
   const getUserData = await prisma.user.findUnique({
@@ -48,83 +49,109 @@ export const getUserByIdServices = async (id: string) => {
   return userData;
 };
 
-export const getUserServices = async (page: number, offset: number) => {
-  const skip = (page - 1) * offset;
-  const user = await prisma.user.findMany({
-    skip: skip,
-    take: offset,
-  });
+//get users
+export const getUserServices = async (page: number, pageSize: number) => {
+  const { currentPage, skip, take } = pagination(page, pageSize);
+  const [user, totalUser] = await prisma.$transaction([
+    prisma.user.findMany({
+      skip,
+      take,
+      omit: {
+        password: true,
+      },
+    }),
+    prisma.user.count(),
+  ]);
+
   if (!user) throw new apiError(404, "user data not found");
-  console.log(user);
-  const userData = user.map(({ password, ...rest }) => rest);
-  console.log(JSON.stringify(userData));
-  return userData;
+  const totalPage = totalUser / take;
+  return {
+    user,
+    pagination: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalUser,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 1,
+    },
+  };
 };
 
 export const getRegisteredUserServices = async (
   eventId: string,
   user: userType,
   page: number,
-  offset: number
+  pageSize: number
 ) => {
-  try {
-    if (user.role === "ORGANIZER") {
-      const checkEvent = await prisma.event.findUnique({
-        where: {
-          id: eventId,
-        },
-      });
-      if (!checkEvent) throw new Error(`event is not available`);
-      else if (checkEvent.userId !== user.id) {
-        throw new Error(`event is not organized by ${user.name}`);
-      }
-    }
-    if (!eventId) throw new Error(`eventId is missing`);
-    const skip = (page - 1) * offset;
-    const getRegisteredUser = await prisma.registration.findMany({
-      skip: skip,
-      take: offset,
+  const { currentPage, skip, take } = pagination(page, pageSize);
+  if (user.role === "ORGANIZER") {
+    const checkEvent = await prisma.event.findUnique({
       where: {
-        eventId: eventId,
+        id: eventId,
+      },
+    });
+    if (!checkEvent) throw new apiError(404, `failed to get events`);
+    else if (checkEvent.userId !== user.id) {
+      throw new Error(`event is not organized by ${user.name}`);
+    }
+  }
+
+  const [registeredUser, totalRegisteredUser] = await prisma.$transaction([
+    prisma.registration.findMany({
+      skip,
+      take,
+      where: {
+        eventId,
       },
       include: {
         user: true,
       },
-    });
+    }),
+    prisma.registration.count({
+      where: {
+        eventId,
+      },
+    }),
+  ]);
 
-    return getRegisteredUser;
-  } catch (error) {
-    throw new Error(` ${error}`);
-  }
+  const totalPage = totalRegisteredUser / take;
+  return {
+    registeredUser,
+    pagination: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalRegisteredUser,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 1,
+    },
+  };
 };
 
 //delete User
 export const deleteUserServices = async (id: string, user: userType) => {
-  try {
-    if (id !== user.id && user.role !== "ADMIN")
-      throw new Error(`user is not allowed to delete this account`);
+  if (id !== user.id && user.role !== "ADMIN")
+    throw new apiError(400, `user is not allowed to delete this account`);
 
-    const checkUser = await prisma.user.findUnique({
-      where: {
-        id: id,
-      },
-    });
+  const checkUser = await prisma.user.findUnique({
+    where: {
+      id: id,
+    },
+  });
 
-    if (!checkUser) throw new Error(`user doesn't exist`);
+  if (!checkUser) throw new apiError(404, `failed to get user credentials`);
 
-    const deleteUser = await prisma.user.delete({
-      where: {
-        id: id,
-      },
-      omit: {
-        password: true,
-      },
-    });
-    console.log(deleteUser);
-    return deleteUser;
-  } catch (error) {
-    throw new Error(`${error}`);
-  }
+  const deleteUser = await prisma.user.delete({
+    where: {
+      id: id,
+    },
+    omit: {
+      password: true,
+    },
+  });
+  console.log(deleteUser);
+  return deleteUser;
 };
 
 export const updateUserServices = async (

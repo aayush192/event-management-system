@@ -1,6 +1,8 @@
 import { prisma } from "../lib/prisma";
 import { userType } from "../dataTypes/dataTypes";
 import apiError from "../utils/apiError";
+import { pagination } from "../utils/pagination";
+import { number } from "zod";
 //user registration
 export const userRegistrationServices = async (user: userType, id: string) => {
   const checkEventStatus = await prisma.event.findUnique({
@@ -45,21 +47,38 @@ export const getRegisteredEventServices = async (
   userId: string,
   user: userType,
   page: number,
-  offset: number
+  pageSize: number
 ) => {
   if (user.role !== "ADMIN" && user.id !== userId)
     throw new apiError(401, `user is not allowed`);
 
-  const skip = (page - 1) * offset;
-  const getRegisteredEvent = await prisma.registration.findMany({
-    skip,
-    take: offset,
-    where: {
-      userId: userId,
+  const { currentPage, skip, take } = pagination(page, pageSize);
+  const [event, totalEvent] = await prisma.$transaction([
+    prisma.registration.findMany({
+      skip,
+      take,
+      where: {
+        userId: userId,
+      },
+      include: { event: true },
+    }),
+    prisma.registration.count({
+      where: {
+        userId: userId,
+      },
+    }),
+  ]);
+  const totalPage = totalEvent! / take;
+  if (!event) throw new apiError(500, "failed to get registered event");
+  return {
+    event,
+    pagination: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalEvent,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPervious: currentPage > 1,
     },
-    include: { event: true },
-  });
-  if (!getRegisteredEvent)
-    throw new apiError(500, "failed to get registered event");
-  return getRegisteredEvent;
+  };
 };

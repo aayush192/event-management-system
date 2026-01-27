@@ -18,12 +18,13 @@ export const createEventSchema = z.object({
   ]),
 });
 
-export const searchEventSchema = createEventSchema
-  .omit({ description: true })
-  .extend({
-    page: z.coerce.number().int(),
-    offset: z.coerce.number().int(),
-  });
+export const searchEventSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  eventdate: z.date().optional(),
+  page: z.coerce.number().int().optional(),
+  offset: z.coerce.number().int().optional(),
+});
 
 export const updateEventStatusSchema = z.object({
   id: z.string(),
@@ -38,8 +39,8 @@ export const userSchema = z.object({
 });
 
 export const paginationSchema = z.object({
-  page: z.coerce.number().int(),
-  offset: z.coerce.number().int(),
+  page: z.coerce.number().int().optional(),
+  offset: z.coerce.number().int().optional(),
 });
 
 export const registerUserSchema = userSchema.extend({
@@ -116,13 +117,18 @@ export const refreshTokenSchema = z.object({
   id: z.string(),
 });
 
+const searchEventOmittedSchema = searchEventSchema.omit({
+  page: true,
+  offset: true,
+});
+
 export const updateEventSchema = createEventSchema
   .extend({ id: z.string() })
   .partial({ name: true, description: true, eventdate: true, category: true });
 
 export type createEventType = z.infer<typeof createEventSchema>;
 
-export type searchEventType = z.infer<typeof searchEventSchema>;
+export type searchEventType = z.infer<typeof searchEventOmittedSchema>;
 
 export type updateEventStatusType = z.infer<typeof updateEventStatusSchema>;
 

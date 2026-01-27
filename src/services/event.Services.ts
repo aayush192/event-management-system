@@ -15,63 +15,49 @@ import {
   cloudinaryRemoveMultipleImage,
 } from "../utils/cloudinary";
 import { deleteEventImagesController } from "../controller/event.Controller";
+import { pagination } from "../utils/pagination";
 
 //get event by search
 export const getEventServices = async (
   page: number,
-  offset: number,
+  pageSize: number,
   SearchValue: searchEventType,
   user: userType
 ) => {
-  const skip = (page - 1) * offset;
+  const { currentPage, skip, take } = pagination(page, pageSize);
 
-  const filters: any[] = [];
-  if (SearchValue.name) {
-    filters.push({
-      name: { contains: SearchValue.name, mode: "insensitive" },
-    });
+  if (user.role !== "admin") {
   }
-
-  if (SearchValue.category) {
-    filters.push({
-      category: SearchValue.category,
-    });
-  }
-
-  if (SearchValue.eventdate) {
-    filters.push({
-      eventdate: new Date(SearchValue.eventdate),
-    });
-  }
-
-  if (user.role !== "admin")
-    filters.push({
-      status: "APPROVED",
-    });
-  console.log(filters[0]);
-  if (filters.length !== 0) {
-    const searchEvent = await prisma.event.findMany({
+  const [searchEvent, totalEvent] = await prisma.$transaction([
+    prisma.event.findMany({
       skip,
-      take: offset,
+      take,
       where: {
-        AND: filters,
+        ...SearchValue,
       },
       include: {
         eventImage: true,
       },
-    });
-    if (searchEvent.length === 0) throw new apiError(400, "failed get event");
-    return searchEvent;
-  }
-  const searchEvent = await prisma.event.findMany({
-    skip,
-    take: offset,
-    include: {
-      eventImage: true,
-    },
-  });
+    }),
+    prisma.event.count({
+      where: {
+        ...SearchValue,
+      },
+    }),
+  ]);
+  const totalPage = totalEvent / take;
   if (searchEvent.length === 0) throw new apiError(400, "failed get event");
-  return searchEvent;
+  return {
+    searchEvent,
+    pagination: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalEvent,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 1,
+    },
+  };
 };
 
 //post event
@@ -182,47 +168,85 @@ export const updateEventServices = async (
 export const getEventByStatusServices = async (
   status: status,
   page: number,
-  offset: number
+  pageSize: number
 ) => {
-  const skip = (page - 1) * offset;
-  const getEventByStatus = await prisma.event.findMany({
-    skip,
-    take: offset,
-    where: {
-      status: status,
-    },
-    include: {
-      eventImage: true,
-    },
-  });
-  if (getEventByStatus.length === 0) {
+  const { currentPage, skip, take } = pagination(page, pageSize);
+  const [EventByStatus, totalEvent] = await prisma.$transaction([
+    prisma.event.findMany({
+      skip,
+      take,
+      where: {
+        status: status,
+      },
+      include: {
+        eventImage: true,
+      },
+    }),
+    prisma.event.count({
+      where: {
+        status,
+      },
+    }),
+  ]);
+  if (EventByStatus.length === 0) {
     throw new apiError(400, `event of this status not available`);
   }
-  return getEventByStatus;
+
+  const totalPage = totalEvent / take;
+  return {
+    EventByStatus,
+    pagination: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalEvent,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 1,
+    },
+  };
 };
 
 //approved events for user
 export const getApprovedEventServices = async (
   page: number,
-  offset: number
+  pageSize: number
 ) => {
-  const skip = (page - 1) * offset;
-  const getApprovedEvent = await prisma.event.findMany({
-    skip,
-    take: offset,
-    where: {
-      status: "APPROVED",
-    },
-    include: {
-      eventImage: true,
-    },
-  });
-
-  if (getApprovedEvent.length === 0) {
+  const { currentPage, skip, take } = pagination(page, pageSize);
+  const [EventByStatus, totalEvent] = await prisma.$transaction([
+    prisma.event.findMany({
+      skip,
+      take,
+      where: {
+        status:"APPROVED",
+      },
+      include: {
+        eventImage: true,
+      },
+    }),
+    prisma.event.count({
+      where: {
+        status:"APPROVED",
+      },
+    }),
+  ]);
+  if (EventByStatus.length === 0) {
     throw new apiError(400, `event of this status not available`);
   }
-  return getApprovedEvent;
+
+  const totalPage = totalEvent / take;
+  return {
+    EventByStatus,
+    pagination: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalEvent,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 1,
+    },
+  };
 };
+
 
 //organized Event
 export const getOrganizedEventServices = async (
