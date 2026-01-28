@@ -142,6 +142,8 @@ export const deleteUserServices = async (id: string, user: userType) => {
 
   if (!checkUser) throw new apiError(404, `failed to get user credentials`);
 
+  const userProfile = await deleteProfileImageServices(user);
+
   const deleteUser = await prisma.user.delete({
     where: {
       id: id,
