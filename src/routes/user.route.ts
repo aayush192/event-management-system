@@ -6,7 +6,6 @@ import {
   getRegisteredUserController,
   getUserByIdController,
   getUserController,
-  createProfileController,
   updateProfileController,
   updateProfileImageController,
   updateUserController,
@@ -21,7 +20,6 @@ import {
   validateQuery,
 } from "../middleWares/validate";
 import {
-  createProfileSchema,
   eventIdSchema,
   paginationSchema,
   updateProfileSchema,
@@ -68,14 +66,7 @@ userRoutes.patch(
   updateUserController
 );
 
-userRoutes.post(
-  "/user/profile",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  validateBody(createProfileSchema),
-  upload.single("image"),
-  createProfileController
-);
+
 userRoutes.patch(
   "/user/update/image",
   verifyTokenMiddleWare,

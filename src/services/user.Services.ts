@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import { prisma } from "../lib/prisma";
 import {
-  createProfileType,
   updateProfileType,
   updateUserType,
   userType,
@@ -152,7 +151,6 @@ export const deleteUserServices = async (id: string, user: userType) => {
       password: true,
     },
   });
-  console.log(deleteUser);
   return deleteUser;
 };
 
@@ -179,42 +177,11 @@ export const updateUserServices = async (
   return updateUser;
 };
 
-export const setProfileServices = async (
-  data: createProfileType,
-  file: Express.Multer.File,
-  user: userType
-) => {
-  data.dob = new Date(data.dob);
-  console.log("uploading started...");
-  if (file.path) {
-    const cloudinaryUpload = await cloudianryUploadImage(file.path);
-    console.log("upload completed");
-    console.log("cloudinary", cloudinaryUpload);
-
-    const setProfile = await prisma.profile.create({
-      data: {
-        ...data,
-        profileImgUrl: cloudinaryUpload.secure_url,
-        publicId: cloudinaryUpload.public_id,
-        userId: user.id,
-      },
-    });
-
-    if (!setProfile)
-      throw new apiError(500, `error during uploading profile data`);
-
-    fs.unlink(file.path);
-
-    return setProfile;
-  }
-};
 
 export const updateProfileImageServices = async (
   file: Express.Multer.File,
   user: userType
 ) => {
-  console.log();
-
   if (!file) throw new apiError(400, "file path missing");
   const profileData = await prisma.profile.findFirst({
     where: {
@@ -224,14 +191,11 @@ export const updateProfileImageServices = async (
   if (!profileData)
     throw new apiError(400, "profile of this user doesnot exist");
 
-  if (!profileData.profileImgUrl || !profileData.publicId)
-    throw new apiError(400, "profile  doesnot exist");
-
-  const cloudinaryRemove = await cloudinaryRemoveImage(profileData.publicId);
-  console.log(cloudinaryRemove);
+  if (profileData.publicId) {
+    await cloudinaryRemoveImage(profileData.publicId);
+  }
 
   const cloudinaryUpload = await cloudianryUploadImage(file.path);
-  console.log(cloudinaryUpload);
 
   const updateImage = await prisma.profile.update({
     where: {

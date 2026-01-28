@@ -51,8 +51,8 @@ eventRoutes.post(
   "/postevent",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
-  validateBody(createEventSchema),
   upload.single("coverImage"),
+  validateBody(createEventSchema),
   postEventController
 );
 

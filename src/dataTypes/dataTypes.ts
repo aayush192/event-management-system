@@ -43,10 +43,13 @@ export const paginationSchema = z.object({
   offset: z.coerce.number().int().optional(),
 });
 
-export const registerUserSchema = userSchema.extend({
+export const registerUserSchema = userSchema.omit({ id: true }).extend({
   password: z
     .string()
     .min(8, { message: "password must contain 8 characters" }),
+  dob: z.coerce.date(),
+  phoneNo: z.string(),
+  description: z.string().optional(),
 });
 
 export const loginSchema = userSchema
@@ -97,7 +100,9 @@ export const verifyOtpSchema = z.object({
   email: z.string(),
 });
 
-export const getOtpSchema = verifyOtpSchema.omit({ otp: true });
+export const getTokenSchema = z.object({
+  email: z.string(),
+});
 
 export const resetTokenSchema = z.object({
   email: z.string(),
@@ -106,13 +111,6 @@ export const resetTokenSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   newPassword: z.string(),
-});
-
-export const createProfileSchema = z.object({
-  dob: z.date(),
-  phoneNo: z.string(),
-  description: z.string().optional(),
-  userId: z.string(),
 });
 
 export const updateProfileSchema = z.object({
@@ -148,6 +146,8 @@ export const updateEventSchema = createEventSchema
   .extend({ id: z.string() })
   .partial({ name: true, description: true, eventdate: true, category: true });
 
+export type getTokenType = z.infer<typeof getTokenSchema>;
+
 export type createEventType = z.infer<typeof createEventSchema>;
 
 export type searchEventType = z.infer<typeof searchEventOmittedSchema>;
@@ -170,14 +170,12 @@ export type changePasswordType = z.infer<typeof changePasswordSchema>;
 
 export type verifyOtpType = z.infer<typeof verifyOtpSchema>;
 
-export type getOtpType = z.infer<typeof getOtpSchema>;
+export type getOtpType = z.infer<typeof getTokenSchema>;
 
 export type resetTokenType = z.infer<typeof resetTokenSchema>;
 
 export type refreshTokenType = z.infer<typeof refreshTokenSchema>;
 
 export type resetPasswordType = z.infer<typeof resetPasswordSchema>;
-
-export type createProfileType = z.infer<typeof createProfileSchema>;
 
 export type updateProfileType = z.infer<typeof updateProfileSchema>;

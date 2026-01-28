@@ -1,20 +1,19 @@
 import express from "express";
 import {
   changePasswordController,
-  getEmailController,
+  resetPasswordEmailController,
   loginUserController,
   refreshAccessTokenController,
   registerUserController,
   resetPasswordController,
-  verifyOtpController,
+  registerMailController,
 } from "../controller/auth.Controller";
 import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
-import { getOtpServices } from "../services/auth.Services";
 import { validateBody } from "../middleWares/validate";
 import {
   changePasswordSchema,
-  getOtpSchema,
+  getTokenSchema,
   loginSchema,
   registerUserSchema,
   resetPasswordSchema,
@@ -22,12 +21,20 @@ import {
   verifyOtpSchema,
 } from "../dataTypes/dataTypes";
 import { verify } from "node:crypto";
+import { upload } from "../middleWares/multer";
 
 const authRoutes = express.Router();
 
 authRoutes.post("/login", validateBody(loginSchema), loginUserController);
+
+authRoutes.post(
+  "/register/mail",
+  validateBody(getTokenSchema),
+  registerMailController
+);
 authRoutes.post(
   "/register",
+  upload.single("image"),
   validateBody(registerUserSchema),
   registerUserController
 );
@@ -38,8 +45,11 @@ authRoutes.patch(
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   changePasswordController
 );
-authRoutes.post("/otp", validateBody(getOtpSchema), getEmailController);
-authRoutes.post("/verify", validateBody(verifyOtpSchema), verifyOtpController);
+authRoutes.post(
+  "/resetpassword/mail",
+  validateBody(getTokenSchema),
+  resetPasswordEmailController
+);
 authRoutes.patch(
   "/resetpassword",
   validateBody(resetPasswordSchema),

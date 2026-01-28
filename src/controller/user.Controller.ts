@@ -6,14 +6,12 @@ import {
   getRegisteredUserServices,
   getUserByIdServices,
   getUserServices,
-  setProfileServices,
   updateProfileImageServices,
   updateProfileServices,
   updateUserServices,
 } from "../services/user.Services";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
-  createProfileType,
   updateProfileType,
   updateUserType,
   userSchema,
@@ -53,7 +51,13 @@ export const getMeController = asyncHandler(
   async (req: Request, res: Response) => {
     const getOwnData = await getMeServices(req.user!);
 
-    return resHandler(res, 200, true, "retrived own data successfully", getOwnData);
+    return resHandler(
+      res,
+      200,
+      true,
+      "retrived own data successfully",
+      getOwnData
+    );
   }
 );
 
@@ -63,10 +67,9 @@ export const getRegisteredUserController = asyncHandler(
     const page = Number(req.query.page) || 1;
     const offset = Number(req.query.offset) || 15;
 
-    const user = req.user!;
     const getRegisteredUser = await getRegisteredUserServices(
       eventId as string,
-      user,
+      req.user!,
       page,
       offset
     );
@@ -102,30 +105,10 @@ export const updateUserController = asyncHandler(
   }
 );
 
-export const createProfileController = asyncHandler(
-  async (req: Request, res: Response) => {
-    const data: createProfileType = req.body;
-    if (!req.file) throw new apiError(401, `image not uploaded`);
-    const file: Express.Multer.File = req.file;
-
-    const user = req.user!;
-    console.log(user);
-
-    const setProfile = await setProfileServices(data, file, user);
-
-    return resHandler(
-      res,
-      201,
-      true,
-      "created profile succcessfully",
-      setProfile
-    );
-  }
-);
 export const updateProfileImageController = asyncHandler(
   async (req: Request, res: Response) => {
     if (!req.file) throw new apiError(401, `image not uploaded`);
-   const file: Express.Multer.File = req.file;
+    const file: Express.Multer.File = req.file;
     const user = req.user!;
 
     const updateProfileImage = await updateProfileImageServices(file, user);
@@ -148,6 +131,12 @@ export const updateProfileController = asyncHandler(
     const data: updateProfileType = req.body;
     const user = req.user!;
     const updateProfile = await updateProfileServices(data, user);
-    return resHandler(res,200,true,"profile updated successfully",updateProfile)
+    return resHandler(
+      res,
+      200,
+      true,
+      "profile updated successfully",
+      updateProfile
+    );
   }
 );

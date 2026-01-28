@@ -4,14 +4,15 @@ import {
   authLoginServices,
   authRegisterServices,
   changePasswordServices,
-  getOtpServices,
+  passwordResetMailServices,
   refreshAccessTokenServices,
+  registerMailServices,
   resetPasswordServices,
-  verifyOtpServices,
 } from "../services/auth.Services";
 import {
   changePasswordType,
   getOtpType,
+  getTokenType,
   loginType,
   registerUserType,
   resetPasswordType,
@@ -20,10 +21,18 @@ import {
 import apiError from "../utils/apiError";
 import { resHandler } from "../utils/responseHandler";
 
+export const registerMailController = async (req: Request, res: Response) => {
+  const data: getTokenType = req.body;
+  const info = await registerMailServices(data.email);
+  resHandler(res, 200, true, "sent mail successfully");
+};
+
 export const registerUserController = asyncHandler(
   async (req: Request, res: Response) => {
+    const token = req.query.token;
     const data: registerUserType = req.body;
-    const info = await authRegisterServices(data);
+    if (!req.file) throw new apiError(400, "profile image not provided");
+    const info = await authRegisterServices(data, req.file, token as string);
     resHandler(res, 201, true, "user registered successfully", info);
   }
 );
@@ -43,20 +52,14 @@ export const changePasswordController = asyncHandler(
     return resHandler(res, 200, true, "password changed successfully", info);
   }
 );
-export const getEmailController = asyncHandler(
+export const resetPasswordEmailController = asyncHandler(
   async (req: Request, res: Response) => {
     const user: getOtpType = req.body;
-    const info = await getOtpServices(user.email);
+    const info = await passwordResetMailServices(user.email);
     return resHandler(res, 200, true, "send email successfully");
   }
 );
-export const verifyOtpController = asyncHandler(
-  async (req: Request, res: Response) => {
-    const user: verifyOtpType = req.body;
-    const info = await verifyOtpServices(user.otp, user.email);
-    return resHandler(res, 200, true, "otp verified successfully", info);
-  }
-);
+
 export const resetPasswordController = asyncHandler(
   async (req: Request, res: Response) => {
     const token = req.query.token;

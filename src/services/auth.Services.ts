@@ -1,59 +1,26 @@
 import bcrypt from "bcrypt";
-import jwt, { Jwt, SignOptions } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import config from "../config/config";
 import apiError from "../utils/apiError";
+import { generateTokens } from "../utils/generateTokens";
 import { checkRoleUtility } from "../utils/roleCheck";
 import {
   changePasswordType,
   refreshTokenType,
+  registerUserType,
   resetTokenType,
   userType,
 } from "../dataTypes/dataTypes";
+import { cloudianryUploadImage } from "../utils/cloudinary";
 import crypto from "crypto";
 import { sendMail } from "../utils/email";
+import { emailDetailUtils } from "../utils/emailDetail";
 
-interface Data {
-  name: string;
-  role: string;
-  email: string;
-  password: string;
-}
 interface loginData {
   email: string;
   password: string;
 }
-
-const generateTokens = (User: userType) => {
-  if (
-    !config.JWT_REFRESH_TOKEN_SECRET_KEY ||
-    !config.JWT_REFRESH_TOKEN_EXPIRES_IN
-  ) {
-    throw new apiError(500, "jwt config missing");
-  }
-
-  const accessToken = jwt.sign(
-    { id: User.id, name: User.name, email: User.email, role: User.role },
-    config.JWT_SECRET,
-    {
-      expiresIn: config.JWT_EXPIRES_IN as SignOptions["expiresIn"] | "1d",
-    }
-  );
-
-  const refreshToken = jwt.sign(
-    {
-      id: User.id,
-    },
-    config.JWT_REFRESH_TOKEN_SECRET_KEY,
-    {
-      expiresIn: config.JWT_REFRESH_TOKEN_EXPIRES_IN as
-        | SignOptions["expiresIn"]
-        | "5d",
-    }
-  );
-
-  return { accessToken, refreshToken };
-};
 
 //user login
 export const authLoginServices = async (data: loginData) => {
@@ -104,21 +71,41 @@ export const authLoginServices = async (data: loginData) => {
       refreshToken: refreshToken,
     },
   });
-  return { data: { ...userData, accessToken, refreshToken } };
+  return { ...userData, accessToken, refreshToken };
 };
 
 //Register User
 
-export const authRegisterServices = async (data: Data) => {
-  const checkUserIfExist = await prisma.user.findFirst({
+export const authRegisterServices = async (
+  data: registerUserType,
+  file: Express.Multer.File,
+  token: string
+) => {
+  const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
+  const checkIfExist = await prisma.mailToken.findUnique({
     where: {
-      email: data.email,
+      email_hashedToken_purpose: {
+        email: data.email,
+        hashedToken,
+        purpose: "REGISTER_USER",
+      },
+      expiresAt: { gt: new Date() },
+      isUsed: false,
     },
   });
-  if (checkUserIfExist) throw new Error("user already exist");
-  console.log(data);
-
-  // TODO: Get role and find in database if exist or not with role name.
+  const updateToken = await prisma.mailToken.update({
+    where: {
+      email_hashedToken_purpose: {
+        email: data.email,
+        hashedToken,
+        purpose: "REGISTER_USER",
+      },
+      isUsed: false,
+    },
+    data: {
+      isUsed: true,
+    },
+  });
 
   const checkRole = await prisma.role.findFirst({
     where: {
@@ -130,19 +117,41 @@ export const authRegisterServices = async (data: Data) => {
     throw new apiError(401, `can't choose admin role`);
   const hashedpasword = bcrypt.hashSync(data.password, 10);
 
+  if (!file) throw new apiError(400, "failed to upload image");
+
+  const cloudinaryUpload = await cloudianryUploadImage(file.path);
+
   const user = await prisma.user.create({
     data: {
       name: data.name,
       email: data.email,
       password: hashedpasword,
       roleId: checkRole.id,
+      profile: {
+        create: {
+          dob: new Date(data.dob),
+          phoneNo: data.phoneNo,
+          description: data.description,
+          profileImgUrl: cloudinaryUpload.secure_url,
+          publicId: cloudinaryUpload.public_id,
+        },
+      },
     },
     omit: {
       password: true,
+      refreshToken: true,
+      createdAt: true,
+      updatedAt: true,
+      roleId: true,
     },
   });
 
-  return user;
+  const { accessToken, refreshToken } = generateTokens({
+    ...user,
+    role: data.role,
+  });
+
+  return { user, accessToken, refreshToken };
 };
 
 //change passswod
@@ -180,8 +189,8 @@ export const changePasswordServices = async (
   return changePassword;
 };
 
-//get otp
-export const getOtpServices = async (email: string) => {
+//send mail for password reset
+export const passwordResetMailServices = async (email: string) => {
   const checkUser = await prisma.user.findFirst({
     where: {
       email,
@@ -190,96 +199,84 @@ export const getOtpServices = async (email: string) => {
 
   if (!checkUser) throw new apiError(400, `user with this email doesn't exist`);
 
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiresIn = new Date(Date.now() + 10 * 60 * 1000);
-  console.log(token);
-  const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
-
-  await prisma.otp.create({
-    data: {
-      hashedOtp: hashedToken,
-      email: email,
-      expiresAt: expiresIn,
-    },
-  });
-  const subject = " reset password";
-
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
-<body style="font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 20px;">
-  <div style="max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px;">
-    <h2 style="color: #333; text-align: center;">Reset Password</h2>
-    <p>Hello ${checkUser.name},</p>
-    <p>We received a request to reset your password. Click the button below to set a new password. This link will expire in 10 minutes.</p>
-    <p style="text-align: center;">
-      <a href="https://localhost:8000/resetpassword?token=${token}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: #fff; text-decoration: none; border-radius: 5px;">Secure Your Account</a>
-    </p>
-    <p>Thanks,<br/>Event Managaement System</p>
-  </div>
-</body>
-</html>`;
-  const info = await sendMail(email, subject, html);
-  console.log(info);
+  const emailSubject = "Reset Password";
+  const emailMessage =
+    "We received a request to reset your password. Click the button below to set a new password. This link will expire in 10 minutes.";
+  const baseUrl = `http://localhost:5173/resetpassword`;
+  const purpose = "RESET_PASSWORD";
+  const info = emailDetailUtils(
+    email,
+    emailSubject,
+    emailMessage,
+    baseUrl,
+    purpose
+  );
   if (!info) throw new apiError(500, "unable to send otp");
   return info;
 };
 
-//verify otp
-export const verifyOtpServices = async (otp: string, email: string) => {
-  const findOtp = await prisma.otp.findFirst({
+//send mail for registration
+export const registerMailServices = async (email: string) => {
+  const checkUser = await prisma.user.findFirst({
     where: {
       email,
-      isUsed: false,
-    },
-  });
-  if (!findOtp) throw new apiError(404, `can't find otp for this email`);
-  const checkDateTime = new Date(Date.now());
-  if (checkDateTime > findOtp.expiresAt)
-    throw new apiError(400, `opt is expired`);
-  if (findOtp.isUsed) throw new apiError(400, `otp already used`);
-  const checkOtp = bcrypt.compareSync(otp, findOtp.hashedOtp);
-  if (!checkOtp) throw new apiError(400, `otp doesn't match`);
-
-  await prisma.otp.update({
-    where: {
-      id: findOtp.id,
-    },
-    data: {
-      isUsed: true,
     },
   });
 
-  const resetToken = jwt.sign(
-    { email: email, payloadType: "resetPassword" },
-    config.JWT_SECRET as string,
-    {
-      expiresIn: "3m",
-    }
+  if (checkUser) throw new apiError(400, `user with this email already exist`);
+
+  const emailSubject = "User Registration";
+  const emailMessage =
+    "We received a request to create an account using this email address.To continue with registration, please verify your email by clicking the button below.";
+  const baseUrl = `http://localhost:5173/register`;
+  const purpose = "REGISTER_USER";
+  const info = emailDetailUtils(
+    email,
+    emailSubject,
+    emailMessage,
+    baseUrl,
+    purpose
   );
-
-  return resetToken;
+  if (!info) throw new apiError(500, "unable to send otp");
+  return info;
 };
 
+//reset password
 export const resetPasswordServices = async (
   token: string,
   newPassword: string
 ) => {
   const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
 
-  const checkToken = await prisma.otp.findFirst({
+  const checkToken = await prisma.mailToken.findFirst({
     where: {
-      hashedOtp: hashedToken,
+      hashedToken: hashedToken,
       isUsed: false,
+      expiresAt: { gt: new Date() },
+      
     },
   });
-  console.log(token, checkToken);
+
   if (!checkToken || checkToken.expiresAt < new Date())
     throw new apiError(400, "token already expired");
+
+
+const updateToken = await prisma.mailToken.update({
+    where: {
+      email_hashedToken_purpose: {
+        email: checkToken?.email,
+        hashedToken: hashedToken,
+        purpose: "RESET_PASSWORD",
+      },
+      isUsed: false,
+      expiresAt: { gt: new Date() },
+  },
+  data: {
+    isUsed:true
+  }
+  });
+  console.log(token, checkToken);
+  
 
   const hashedPassword = bcrypt.hashSync(newPassword, 10);
   const resetPassword = await prisma.user.update({
@@ -296,7 +293,9 @@ export const resetPasswordServices = async (
 };
 
 //refreshAccessToken
-export const refreshAccessTokenServices = async (incomingRefreshToken: string) => {
+export const refreshAccessTokenServices = async (
+  incomingRefreshToken: string
+) => {
   if (!incomingRefreshToken) throw new apiError(400, "refresh Token missing");
 
   const token = jwt.verify(

@@ -33,6 +33,10 @@ enum EventCategory {
   OTHER
 }
 
+enum Purpose{
+  RESET_PASSWORD
+  REGISTER_USER
+}
 
 model User{
   id String @id @default(uuid())
@@ -93,6 +97,8 @@ model EventImage{
   publicId String
   event Event @relation(fields: [eventId],references: [id], onDelete:Cascade)
   eventId String 
+
+  @@index(eventId)
 }
 
 model Registration{
@@ -106,11 +112,14 @@ model Registration{
  @@unique([userId,eventId])
 }
 
-model Otp{
+model mailToken{
   id String @id @default(uuid())
-  hashedOtp String
+  hashedToken String
   email String
+  purpose Purpose
   expiresAt DateTime 
   createdAt DateTime @default(now())
   isUsed Boolean @default(false)
+  
+  @@unique([email,hashedToken,purpose])
 }
