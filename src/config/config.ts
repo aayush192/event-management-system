@@ -1,20 +1,25 @@
 import dotenv from "dotenv";
-
+import { valiadateEnv } from "../dataTypes/dataTypes";
+import apiError from "../utils/apiError";
 dotenv.config({
   path: "./.env",
   quiet: true,
 });
 
-export default {
-  DATABASE_URL: process.env.DATABASE_URL,
-  JWT_SECRET: process.env.JWT_SECRET,
-  PORT: process.env.PORT,
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
-  JWT_REFRESH_TOKEN_EXPIRES_IN: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
-  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-  CLOUDINARY_SECRET: process.env.CLOUDINARY_API_SECRET,
+const env = valiadateEnv.parse(process.env);
 
-  EMAIL: process.env.EMAIL,
-  PASSWORD: process.env.PASSWORD,
+export default {
+  DATABASE_URL: env.DATABASE_URL,
+  JWT_SECRET: env.JWT_SECRET,
+  PORT: env.PORT,
+  JWT_EXPIRES_IN: env.JWT_EXPIRES_IN,
+
+  JWT_REFRESH_TOKEN_SECRET_KEY: env.JWT_REFRESH_TOKEN_SECRET_KEY,
+  JWT_REFRESH_TOKEN_EXPIRES_IN: env.JWT_REFRESH_TOKEN_EXPIRES_IN,
+  CLOUDINARY_CLOUD_NAME: env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: env.CLOUDINARY_API_KEY,
+  CLOUDINARY_SECRET: env.CLOUDINARY_API_SECRET,
+
+  EMAIL: env.EMAIL,
+  PASSWORD: env.PASSWORD,
 };

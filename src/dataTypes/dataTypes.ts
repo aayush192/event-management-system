@@ -65,6 +65,28 @@ export const updateUserSchema = z.object({
   roleId: z.string().optional(),
 });
 
+export const valiadateEnv = z.object({
+  DATABASE_URL: z.url().nonempty("database url can't be empty"),
+  JWT_SECRET: z.string().nonempty("jwt token secret can't be empty"),
+  PORT: z.string().nonempty("port can't be empty"),
+  JWT_EXPIRES_IN: z.string().nonempty("token expire time must be provided"),
+  JWT_REFRESH_TOKEN_SECRET_KEY: z
+    .string()
+    .nonempty("jwt refresh token secret key can't be empty"),
+  JWT_REFRESH_TOKEN_EXPIRES_IN: z
+    .string()
+    .nonempty("jwt refresh token expire time can't be empty"),
+  CLOUDINARY_CLOUD_NAME: z
+    .string()
+    .nonempty("cloudinary cloud name can't be empty"),
+  CLOUDINARY_API_KEY: z.string().nonempty("cloudinary api key can't be empty"),
+  CLOUDINARY_API_SECRET: z
+    .string()
+    .nonempty("cloudinary api secret can't be empty"),
+  EMAIL: z.email().nonempty("email can't be empty"),
+  PASSWORD: z.string().nonempty("password can't cn't be empty"),
+});
+
 export const changePasswordSchema = z.object({
   old_password: z.string(),
   new_password: z.string(),

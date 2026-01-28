@@ -25,11 +25,14 @@ interface loginData {
 }
 
 const generateTokens = (User: userType) => {
-  if (!config.JWT_SECRET || !config.JWT_REFRESH_TOKEN_EXPIRES_IN) {
+  if (
+    !config.JWT_REFRESH_TOKEN_SECRET_KEY ||
+    !config.JWT_REFRESH_TOKEN_EXPIRES_IN
+  ) {
     throw new apiError(500, "jwt config missing");
   }
 
-  const newAccessToken = jwt.sign(
+  const accessToken = jwt.sign(
     { id: User.id, name: User.name, email: User.email, role: User.role },
     config.JWT_SECRET,
     {
@@ -37,11 +40,11 @@ const generateTokens = (User: userType) => {
     }
   );
 
-  const newRefreshToken = jwt.sign(
+  const refreshToken = jwt.sign(
     {
       id: User.id,
     },
-    config.JWT_SECRET,
+    config.JWT_REFRESH_TOKEN_SECRET_KEY,
     {
       expiresIn: config.JWT_REFRESH_TOKEN_EXPIRES_IN as
         | SignOptions["expiresIn"]
@@ -49,7 +52,7 @@ const generateTokens = (User: userType) => {
     }
   );
 
-  return { newAccessToken, newRefreshToken };
+  return { accessToken, refreshToken };
 };
 
 //user login
@@ -88,7 +91,7 @@ export const authLoginServices = async (data: loginData) => {
     throw new apiError(400, "Role not found");
   }
 
-  const { newAccessToken, newRefreshToken } = generateTokens({
+  const { accessToken, refreshToken } = generateTokens({
     ...userData,
     role: getRole.role,
   } as userType);
@@ -98,10 +101,10 @@ export const authLoginServices = async (data: loginData) => {
       id: fetchedUserData.id,
     },
     data: {
-      refreshToken: newRefreshToken,
+      refreshToken: refreshToken,
     },
   });
-  return { data: { ...userData, newAccessToken, newRefreshToken } };
+  return { data: { ...userData, accessToken, refreshToken } };
 };
 
 //Register User
@@ -293,12 +296,12 @@ export const resetPasswordServices = async (
 };
 
 //refreshAccessToken
-export const refreshAccessTokenServices = async (refreshToken: string) => {
-  if (!refreshToken) throw new apiError(400, "refresh Token missing");
+export const refreshAccessTokenServices = async (incomingRefreshToken: string) => {
+  if (!incomingRefreshToken) throw new apiError(400, "refresh Token missing");
 
   const token = jwt.verify(
-    refreshToken,
-    config.JWT_SECRET as jwt.Secret
+    incomingRefreshToken,
+    config.JWT_REFRESH_TOKEN_SECRET_KEY as jwt.Secret
   ) as refreshTokenType;
 
   const fetchedUserData = await prisma.user.findUnique({
@@ -328,7 +331,7 @@ export const refreshAccessTokenServices = async (refreshToken: string) => {
     throw new apiError(400, "Role not found");
   }
 
-  const { newAccessToken, newRefreshToken } = generateTokens({
+  const { accessToken, refreshToken } = generateTokens({
     ...userData,
     role: getRole.role,
   } as userType);
@@ -337,9 +340,9 @@ export const refreshAccessTokenServices = async (refreshToken: string) => {
       id: fetchedUserData.id,
     },
     data: {
-      refreshToken: newRefreshToken,
+      refreshToken: refreshToken,
     },
   });
 
-  return { newAccessToken, newRefreshToken };
+  return { accessToken, refreshToken };
 };
