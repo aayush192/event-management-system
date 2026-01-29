@@ -4,7 +4,7 @@ import { omit } from "zod/v4/core/util.cjs";
 export const createEventSchema = z.object({
   name: z.string().min(1, { message: "you must provide a name" }),
   description: z.string(),
-  eventdate: z.date(),
+  eventdate: z.coerce.date(),
   category: z.enum([
     "CONFERENCE",
     "WORKSHOP",
@@ -62,11 +62,15 @@ export const loginSchema = userSchema
     password: z.string().min(8, { message: "password must have 8 characters" }),
   });
 
-export const updateUserSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().optional(),
-  roleId: z.string().optional(),
-});
+export const updateUserSchema = z
+  .object({
+    name: z.string().optional(),
+    email: z.string().optional(),
+    roleId: z.string().optional(),
+  })
+  .refine((data) => !data.email || !data.name || !data.roleId, {
+    message: "at least one value must be provided to update",
+  });
 
 export const valiadateEnv = z.object({
   DATABASE_URL: z.url().nonempty("database url can't be empty"),
@@ -143,8 +147,14 @@ const searchEventOmittedSchema = searchEventSchema.omit({
 });
 
 export const updateEventSchema = createEventSchema
-  .extend({ id: z.string() })
-  .partial({ name: true, description: true, eventdate: true, category: true });
+  .partial()
+  .refine(
+    (data) =>
+      data.category || !data.description || !data.eventdate || !data.name,
+    {
+      message: "at least one data must be provided",
+    }
+  );
 
 export type getTokenType = z.infer<typeof getTokenSchema>;
 

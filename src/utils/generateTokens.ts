@@ -1,5 +1,5 @@
 import config from "../config/config";
-import { userType } from "../dataTypes/dataTypes";
+import { userType } from "../dataTypes/zod";
 import apiError from "./apiError";
 import jwt, { Jwt, SignOptions } from "jsonwebtoken";
 export const generateTokens = (User: userType) => {

@@ -6,7 +6,6 @@ export const resHandler = async (
   message: string,
   data: any = null
 ) => {
-  console.log(statusCode, data, success, message);
   if (!data) {
     return res.status(statusCode).json({ success, message });
   }

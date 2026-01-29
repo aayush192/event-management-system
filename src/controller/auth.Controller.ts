@@ -17,7 +17,7 @@ import {
   registerUserType,
   resetPasswordType,
   verifyOtpType,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 import apiError from "../utils/apiError";
 import { resHandler } from "../utils/responseHandler";
 

@@ -11,7 +11,7 @@ import {
   registerUserType,
   resetTokenType,
   userType,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 import { cloudianryUploadImage } from "../utils/cloudinary";
 import crypto from "crypto";
 import { sendMail } from "../utils/email";
@@ -74,8 +74,6 @@ export const authLoginServices = async (data: loginData) => {
   return { ...userData, accessToken, refreshToken };
 };
 
-
-
 //Register User
 export const authRegisterServices = async (
   data: registerUserType,
@@ -133,7 +131,6 @@ export const authRegisterServices = async (
           dob: new Date(data.dob),
           phoneNo: data.phoneNo,
           description: data.description,
-          profileImgUrl: cloudinaryUpload.secure_url,
           publicId: cloudinaryUpload.public_id,
         },
       },
@@ -254,15 +251,13 @@ export const resetPasswordServices = async (
       hashedToken: hashedToken,
       isUsed: false,
       expiresAt: { gt: new Date() },
-      
     },
   });
 
   if (!checkToken || checkToken.expiresAt < new Date())
     throw new apiError(400, "token already expired");
 
-
-const updateToken = await prisma.mailToken.update({
+  const updateToken = await prisma.mailToken.update({
     where: {
       email_hashedToken_purpose: {
         email: checkToken?.email,
@@ -271,13 +266,11 @@ const updateToken = await prisma.mailToken.update({
       },
       isUsed: false,
       expiresAt: { gt: new Date() },
-  },
-  data: {
-    isUsed:true
-  }
+    },
+    data: {
+      isUsed: true,
+    },
   });
-  console.log(token, checkToken);
-  
 
   const hashedPassword = bcrypt.hashSync(newPassword, 10);
   const resetPassword = await prisma.user.update({

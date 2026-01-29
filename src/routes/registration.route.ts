@@ -7,7 +7,7 @@ import {
 import { verifyTokenMiddleWare } from "../middleWares/verifyTokenMiddleWare";
 import { verifyAllowedRoleMiddleWare } from "../middleWares/verifyAllowedRole";
 import { validateQuery } from "../middleWares/validate";
-import { eventIdSchema, userIdSchema } from "../dataTypes/dataTypes";
+import { eventIdSchema, userIdSchema } from "../dataTypes/zod";
 
 const registrationRoutes = express.Router();
 registrationRoutes.post(

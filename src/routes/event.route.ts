@@ -29,7 +29,7 @@ import {
   updateEventSchema,
   updateEventStatusSchema,
   userIdSchema,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 
 const eventRoutes = express.Router();
 

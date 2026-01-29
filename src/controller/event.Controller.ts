@@ -18,7 +18,7 @@ import {
   searchEventType,
   updateEventType,
   createEventType,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 import { asyncHandler } from "../utils/asyncHandler";
 import { resHandler } from "../utils/responseHandler";
 
@@ -195,7 +195,6 @@ export const deleteEventImagesController = asyncHandler(
     const { eventImageId } = req.params;
     if (Array.isArray(eventImageId))
       throw new apiError(400, "params shouldn't be an array");
-    console.log(eventImageId);
     const deleteEventImage = await deleteEventImagesServices(
       eventImageId,
       req.user!

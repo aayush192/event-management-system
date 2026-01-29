@@ -25,7 +25,7 @@ import {
   updateProfileSchema,
   updateUserSchema,
   userIdSchema,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 const userRoutes = express.Router();
 
 userRoutes.get(
@@ -36,17 +36,17 @@ userRoutes.get(
   getUserController
 );
 userRoutes.get(
-  "/user/me",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN", "USER", "ORGANIZER"),
-  getMeController
-);
-userRoutes.get(
   "/user/:userId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN"),
   validateParams(userIdSchema),
   getUserByIdController
+);
+userRoutes.get(
+  "/user/me",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "USER", "ORGANIZER"),
+  getMeController
 );
 
 userRoutes.get(
@@ -66,34 +66,33 @@ userRoutes.patch(
   updateUserController
 );
 
-
-userRoutes.patch(
-  "/user/update/image",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  upload.single("image"),
-  updateProfileImageController
-);
-userRoutes.patch(
-  "/user/update/profile",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  validateBody(updateProfileSchema),
-  updateProfileController
-);
-userRoutes.delete(
-  "/user/delete/profileimage",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  deleteProfileImageController
-);
-
 userRoutes.delete(
   "/user/delete/:userId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   validateParams(userIdSchema),
   deleteUserController
+);
+
+userRoutes.patch(
+  "/user/profile/update/image",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  upload.single("image"),
+  updateProfileImageController
+);
+userRoutes.patch(
+  "/user/profile/update",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  validateBody(updateProfileSchema),
+  updateProfileController
+);
+userRoutes.delete(
+  "/user/profile/delete/image",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  deleteProfileImageController
 );
 
 export default userRoutes;

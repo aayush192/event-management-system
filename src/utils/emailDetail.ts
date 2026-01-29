@@ -11,7 +11,6 @@ export const emailDetailUtils = async (
 ) => {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresIn = new Date(Date.now() + 10 * 60 * 1000);
-  console.log(token);
   const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
 
   const storeToken = await prisma.mailToken.create({

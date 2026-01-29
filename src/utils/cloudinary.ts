@@ -23,7 +23,6 @@ export const cloudinaryRemoveImage = async (imagePublicId: string) => {
   try {
     const result = await cloudinary.uploader.destroy(imagePublicId);
   } catch (error) {
-    console.log(error);
     throw new apiError(500, "internal server error (cloudinary)");
   }
 };
@@ -35,10 +34,8 @@ export const cloudinaryRemoveMultipleImage = async (
     const result = publicIds.map((publicId) => {
       cloudinaryRemoveImage(publicId.publicId);
     });
-    console.log(result);
     return result;
   } catch (error) {
-    console.log(error);
     throw new Error("Internal Server Error (cloudinary)");
   }
 };

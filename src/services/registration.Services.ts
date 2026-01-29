@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma";
-import { userType } from "../dataTypes/dataTypes";
+import { userType } from "../dataTypes/zod";
 import apiError from "../utils/apiError";
 import { pagination } from "../utils/pagination";
 import { number } from "zod";
@@ -20,7 +20,6 @@ export const userRegistrationServices = async (user: userType, id: string) => {
       eventId: id,
     },
   });
-  console.log(userRegistration);
   return userRegistration;
 };
 

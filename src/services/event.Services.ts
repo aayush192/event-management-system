@@ -8,7 +8,7 @@ import {
   updateEventStatusType,
   updateEventType,
   userType,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 import {
   cloudianryUploadImage,
   cloudinaryRemoveImage,
@@ -164,8 +164,6 @@ export const updateEventServices = async (
       id: eventId,
     },
   });
-  if (!data.category && !data.description && !data.eventdate && !data.name)
-    throw new apiError(400, "required credentials not provided");
   if (!checkEvent) throw new apiError(404, "event not found");
   if (checkEvent.userId !== user.id) throw new apiError(401, "unauthorized");
   const updateEvent = await prisma.event.update({
@@ -214,7 +212,6 @@ export const getEventByStatusServices = async (
     };
   });
 
-
   const totalPage = totalEvent / take;
   return {
     eventWithImage,
@@ -252,17 +249,18 @@ export const getApprovedEventServices = async (
       },
     }),
   ]);
-  if (approvedEvent.length === 0) throw new apiError(400, `event of this status not available`);
-  
-    const eventWithImage = approvedEvent.map((event) => {
-      return {
-        ...event,
-        coverImageUrl: cloudinaryGetImage(event.publicId),
-        eventImage: event.eventImage.map((image) => {
-          return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
-        }),
-      };
-    });
+  if (approvedEvent.length === 0)
+    throw new apiError(400, `event of this status not available`);
+
+  const eventWithImage = approvedEvent.map((event) => {
+    return {
+      ...event,
+      coverImageUrl: cloudinaryGetImage(event.publicId),
+      eventImage: event.eventImage.map((image) => {
+        return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+      }),
+    };
+  });
 
   const totalPage = totalEvent / take;
   return {
@@ -296,15 +294,15 @@ export const getOrganizedEventServices = async (
   if (organizedEvent.length === 0)
     throw new apiError(400, `doesn't have any organized event`);
 
-    const eventWithImage = organizedEvent.map((event) => {
-      return {
-        ...event,
-        coverImageUrl: cloudinaryGetImage(event.publicId),
-        eventImage: event.eventImage.map((image) => {
-          return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
-        }),
-      };
-    });
+  const eventWithImage = organizedEvent.map((event) => {
+    return {
+      ...event,
+      coverImageUrl: cloudinaryGetImage(event.publicId),
+      eventImage: event.eventImage.map((image) => {
+        return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+      }),
+    };
+  });
   return eventWithImage;
 };
 

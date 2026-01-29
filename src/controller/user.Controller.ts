@@ -16,7 +16,7 @@ import {
   updateUserType,
   userSchema,
   userType,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 import apiError from "../utils/apiError";
 import multer from "multer";
 import { resHandler } from "../utils/responseHandler";
@@ -108,14 +108,16 @@ export const updateProfileImageController = asyncHandler(
     if (!req.file) throw new apiError(401, `image not uploaded`);
     const file: Express.Multer.File = req.file;
 
-    const updateProfileImage = await updateProfileImageServices(file, req.user!);
+    const updateProfileImage = await updateProfileImageServices(
+      file,
+      req.user!
+    );
 
     return resHandler(res, 200, true, "updated profile image successfully");
   }
 );
 export const deleteProfileImageController = asyncHandler(
   async (req: Request, res: Response) => {
-
     const deleteProfileImage = await deleteProfileImageServices(req.user!);
 
     return resHandler(res, 204, true, "deleted profile image successfully");

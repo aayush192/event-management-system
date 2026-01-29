@@ -19,7 +19,7 @@ import {
   resetPasswordSchema,
   resetTokenSchema,
   verifyOtpSchema,
-} from "../dataTypes/dataTypes";
+} from "../dataTypes/zod";
 import { verify } from "node:crypto";
 import { upload } from "../middleWares/multer";
 

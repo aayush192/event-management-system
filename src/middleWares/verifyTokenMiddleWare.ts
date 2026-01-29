@@ -24,9 +24,7 @@ export const verifyTokenMiddleWare = async (
     if (!token) throw new Error("token not available");
 
     if (!config.JWT_SECRET) throw new Error("jwt error");
-    console.log("verifying...");
     const data = jwt.verify(token, config.JWT_SECRET) as userData;
-    console.log("verified...");
 
     req.user = data;
 
