@@ -71,7 +71,13 @@ export const updateEventStatusController = asyncHandler(
     const data: updateEventStatusType = req.body;
     const updateEvent = await updateEventStatus(data);
 
-    return resHandler(res, 200, true, "status of the event is updated successfully",updateEvent);
+    return resHandler(
+      res,
+      200,
+      true,
+      "status of the event is updated successfully",
+      updateEvent
+    );
   }
 );
 
@@ -194,7 +200,6 @@ export const deleteEventImagesController = asyncHandler(
       eventImageId,
       req.user!
     );
-
     return resHandler(res, 204, true, "event image deleted successfully");
   }
 );

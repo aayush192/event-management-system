@@ -13,6 +13,7 @@ import {
   cloudianryUploadImage,
   cloudinaryRemoveImage,
   cloudinaryRemoveMultipleImage,
+  cloudinaryGetImage,
 } from "../utils/cloudinary";
 import { deleteEventImagesController } from "../controller/event.Controller";
 import { pagination } from "../utils/pagination";
@@ -45,10 +46,23 @@ export const getEventServices = async (
       },
     }),
   ]);
+
+  if (searchEvent.length === 0) throw new apiError(404, "failed get event");
+
+  const eventWithImage = searchEvent.map((event) => {
+    return {
+      ...event,
+      coverImageUrl: cloudinaryGetImage(event.publicId),
+      eventImage: event.eventImage.map((image) => {
+        return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+      }),
+    };
+  });
+
   const totalPage = totalEvent / take;
-  if (searchEvent.length === 0) throw new apiError(400, "failed get event");
+
   return {
-    searchEvent,
+    eventWithImage,
     pagination: {
       page: currentPage,
       pageSize: take,
@@ -75,16 +89,14 @@ export const postEventServices = async (
       description: data.description,
       eventdate: new Date(data.eventdate),
       category: data.category,
-      coverImageUrl: uploadCoverImage.secure_url,
       publicId: uploadCoverImage.public_id,
       userId: userId,
     },
   });
 
   if (!event) {
-    await cloudinaryRemoveImage(uploadCoverImage.public_id)
-    throw new apiError(500, "failed to add event"); 
-    
+    await cloudinaryRemoveImage(uploadCoverImage.public_id);
+    throw new apiError(500, "failed to add event");
   }
   fs.unlink(file.path);
   return event;
@@ -114,8 +126,7 @@ export const deleteEventServices = async (id: string, user: userType) => {
   });
   if (!checkEvent) throw new apiError(400, `event not found`);
   if (user.role === "ORGANIZER") {
-    if (user.id !== checkEvent?.userId)
-      throw new apiError(401, `unauthorized`);
+    if (user.id !== checkEvent?.userId) throw new apiError(401, `unauthorized`);
   }
   await cloudinaryRemoveImage(checkEvent.publicId);
 
@@ -156,8 +167,7 @@ export const updateEventServices = async (
   if (!data.category && !data.description && !data.eventdate && !data.name)
     throw new apiError(400, "required credentials not provided");
   if (!checkEvent) throw new apiError(404, "event not found");
-  if (checkEvent.userId !== user.id)
-    throw new apiError(401, "unauthorized");
+  if (checkEvent.userId !== user.id) throw new apiError(401, "unauthorized");
   const updateEvent = await prisma.event.update({
     where: {
       id: eventId,
@@ -192,13 +202,22 @@ export const getEventByStatusServices = async (
       },
     }),
   ]);
-  if (EventByStatus.length === 0) {
+  if (EventByStatus.length === 0)
     throw new apiError(400, `event of this status not available`);
-  }
+  const eventWithImage = EventByStatus.map((event) => {
+    return {
+      ...event,
+      coverImageUrl: cloudinaryGetImage(event.publicId),
+      eventImage: event.eventImage.map((image) => {
+        return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+      }),
+    };
+  });
+
 
   const totalPage = totalEvent / take;
   return {
-    EventByStatus,
+    eventWithImage,
     pagination: {
       page: currentPage,
       pageSize: take,
@@ -216,12 +235,12 @@ export const getApprovedEventServices = async (
   pageSize: number
 ) => {
   const { currentPage, skip, take } = pagination(page, pageSize);
-  const [EventByStatus, totalEvent] = await prisma.$transaction([
+  const [approvedEvent, totalEvent] = await prisma.$transaction([
     prisma.event.findMany({
       skip,
       take,
       where: {
-        status:"APPROVED",
+        status: "APPROVED",
       },
       include: {
         eventImage: true,
@@ -229,17 +248,25 @@ export const getApprovedEventServices = async (
     }),
     prisma.event.count({
       where: {
-        status:"APPROVED",
+        status: "APPROVED",
       },
     }),
   ]);
-  if (EventByStatus.length === 0) {
-    throw new apiError(400, `event of this status not available`);
-  }
+  if (approvedEvent.length === 0) throw new apiError(400, `event of this status not available`);
+  
+    const eventWithImage = approvedEvent.map((event) => {
+      return {
+        ...event,
+        coverImageUrl: cloudinaryGetImage(event.publicId),
+        eventImage: event.eventImage.map((image) => {
+          return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+        }),
+      };
+    });
 
   const totalPage = totalEvent / take;
   return {
-    EventByStatus,
+    eventWithImage,
     pagination: {
       page: currentPage,
       pageSize: take,
@@ -251,7 +278,6 @@ export const getApprovedEventServices = async (
   };
 };
 
-
 //organized Event
 export const getOrganizedEventServices = async (
   user: userType,
@@ -259,7 +285,7 @@ export const getOrganizedEventServices = async (
 ) => {
   if (user.role === "ORGANIZER" && userId !== user.id)
     throw new apiError(401, `can't retrive the events`);
-  const getOrganizedEvent = await prisma.event.findMany({
+  const organizedEvent = await prisma.event.findMany({
     where: {
       userId: userId,
     },
@@ -267,10 +293,19 @@ export const getOrganizedEventServices = async (
       eventImage: true,
     },
   });
-  if (getOrganizedEvent.length === 0)
+  if (organizedEvent.length === 0)
     throw new apiError(400, `doesn't have any organized event`);
 
-  return getOrganizedEvent;
+    const eventWithImage = organizedEvent.map((event) => {
+      return {
+        ...event,
+        coverImageUrl: cloudinaryGetImage(event.publicId),
+        eventImage: event.eventImage.map((image) => {
+          return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+        }),
+      };
+    });
+  return eventWithImage;
 };
 
 //postEventImage
@@ -285,10 +320,8 @@ export const postEventImageServices = async (
       id: eventId,
     },
   });
-  if (!eventData)
-    throw new apiError(400, "event not available");
-  if (eventData.userId !== user.id)
-    throw new apiError(401, "unauthorized");
+  if (!eventData) throw new apiError(400, "event not available");
+  if (eventData.userId !== user.id) throw new apiError(401, "unauthorized");
 
   const filePath = file.map((filepath) => filepath.path);
 
@@ -298,7 +331,6 @@ export const postEventImageServices = async (
     })
   );
   const imageData = cloudinaryUploadImages.map((image) => ({
-    imageUrl: image.secure_url,
     publicId: image.public_id,
     eventId: eventId,
   }));

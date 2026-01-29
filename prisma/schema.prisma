@@ -59,7 +59,6 @@ id String @id @default(uuid())
 dob DateTime
 phoneNo String
 description String?
-profileImgUrl String?
 publicId String?
 user User @relation(fields: [userId],references: [id],onDelete:Cascade)
 userId String @unique
@@ -82,7 +81,6 @@ model Event{
   user User @relation(fields: [userId] ,references: [id],onDelete: Cascade)
   status Status @default(PENDING)
   category EventCategory @default(OTHER)
-  coverImageUrl String
   publicId String
   userId String
   registrations Registration[]
@@ -93,7 +91,6 @@ model Event{
 
 model EventImage{
   id String @id @default(uuid())
-  imageUrl String
   publicId String
   event Event @relation(fields: [eventId],references: [id], onDelete:Cascade)
   eventId String 

@@ -4,9 +4,11 @@ export const resHandler = async (
   statusCode: number,
   success: boolean,
   message: string,
-  data?: any
+  data: any = null
 ) => {
-  if (!data) return res.status(statusCode).json({ success, message });
-
-  res.status(statusCode).json({ success, message, data });
+  console.log(statusCode, data, success, message);
+  if (!data) {
+    return res.status(statusCode).json({ success, message });
+  }
+  return res.status(statusCode).json({ success, message, data });
 };

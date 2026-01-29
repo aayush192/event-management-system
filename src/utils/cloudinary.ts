@@ -42,3 +42,13 @@ export const cloudinaryRemoveMultipleImage = async (
     throw new Error("Internal Server Error (cloudinary)");
   }
 };
+
+export const cloudinaryGetImage =(imagePublicId: string) => {
+  try {
+    return cloudinary.url(imagePublicId, {
+      secure: true,
+    });
+  } catch (error) {
+    throw new apiError(500, "internal server error(cloudianry");
+  }
+};
