@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Status {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+enum EventCategory {
+  CONFERENCE
+  WORKSHOP
+  MEETUP
+  WEBINAR
+  SEMINAR
+  SOCIAL
+  SPORTS
+  MUSIC
+  OTHER
+}
+
+enum Purpose {
+  RESET_PASSWORD
+  REGISTER_USER
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  role          Role           @relation(fields: [roleId], references: [id])
+  roleId        String
+  password      String
+  Posts         Event[]
+  registrations Registration[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  profile       Profile?
+  refreshToken  String?
+
+  @@index([email])
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  dob         DateTime
+  phoneNo     String
+  description String?
+  publicId    String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @unique
+}
+
+model Role {
+  id   String @id @unique @default(uuid())
+  role String @unique
+  user User[]
+}
+
+model Event {
+  id            String         @id @default(uuid())
+  name          String
+  description   String
+  postDate      DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  eventdate     DateTime
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        Status         @default(PENDING)
+  category      EventCategory  @default(OTHER)
+  publicId      String
+  userId        String
+  registrations Registration[]
+  eventImage    EventImage[]
+
+  @@index([name])
+}
+
+model EventImage {
+  id       String @id @default(uuid())
+  publicId String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId  String
+
+  @@index(eventId)
+}
+
+model Registration {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, eventId])
+}
+
+model mailToken {
+  id          String   @id @default(uuid())
+  hashedToken String
+  email       String
+  purpose     Purpose
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  isUsed      Boolean  @default(false)
+
+  @@unique([email, hashedToken, purpose])
+}
