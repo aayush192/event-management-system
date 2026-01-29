@@ -81,7 +81,11 @@ export const postEventServices = async (
     },
   });
 
-  if (!event) throw new apiError(500, "failed to add event");
+  if (!event) {
+    await cloudinaryRemoveImage(uploadCoverImage.public_id)
+    throw new apiError(500, "failed to add event"); 
+    
+  }
   fs.unlink(file.path);
   return event;
 };
@@ -97,7 +101,7 @@ export const updateEventStatus = async (data: updateEventStatusType) => {
     },
   });
 
-  if (!updateEvent) throw new apiError(500, "failed to event");
+  if (!updateEvent) throw new apiError(500, "failed to update event status");
   return updateEvent;
 };
 
@@ -111,7 +115,7 @@ export const deleteEventServices = async (id: string, user: userType) => {
   if (!checkEvent) throw new apiError(400, `event not found`);
   if (user.role === "ORGANIZER") {
     if (user.id !== checkEvent?.userId)
-      throw new apiError(401, `this event is not organized by ${user.name}`);
+      throw new apiError(401, `unauthorized`);
   }
   await cloudinaryRemoveImage(checkEvent.publicId);
 
@@ -150,10 +154,10 @@ export const updateEventServices = async (
     },
   });
   if (!data.category && !data.description && !data.eventdate && !data.name)
-    throw new apiError(400, "no data provided");
+    throw new apiError(400, "required credentials not provided");
   if (!checkEvent) throw new apiError(404, "event not found");
   if (checkEvent.userId !== user.id)
-    throw new apiError(400, "can't update others event");
+    throw new apiError(401, "unauthorized");
   const updateEvent = await prisma.event.update({
     where: {
       id: eventId,
@@ -282,9 +286,9 @@ export const postEventImageServices = async (
     },
   });
   if (!eventData)
-    throw new apiError(400, "event having this Id is not available");
+    throw new apiError(400, "event not available");
   if (eventData.userId !== user.id)
-    throw new apiError(401, "can't upload image in others event");
+    throw new apiError(401, "unauthorized");
 
   const filePath = file.map((filepath) => filepath.path);
 
@@ -335,7 +339,7 @@ export const deleteEventImagesServices = async (
     },
   });
   if (checkEventOrganizer?.userId !== user.id)
-    throw new apiError(401, "can't delete others event's image");
+    throw new apiError(401, "unauthorized");
   await cloudinaryRemoveImage(checkEventImage.publicId);
 
   const deleteImage = await prisma.eventImage.delete({

@@ -46,9 +46,8 @@ export const loginUserController = asyncHandler(
 );
 export const changePasswordController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = req.user!;
     const data: changePasswordType = req.body;
-    const info = await changePasswordServices(user, data);
+    const info = await changePasswordServices(req.user!, data);
     return resHandler(res, 200, true, "password changed successfully", info);
   }
 );
@@ -75,7 +74,6 @@ export const refreshAccessTokenController = asyncHandler(
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) throw new apiError(400, "missing refresh token");
     const info = await refreshAccessTokenServices(refreshToken);
-
     return resHandler(res, 200, true, "token refreshed successfully", info);
   }
 );

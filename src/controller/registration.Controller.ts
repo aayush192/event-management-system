@@ -10,10 +10,9 @@ import { resHandler } from "../utils/responseHandler";
 export const userRegistrationController = asyncHandler(
   async (req: Request, res: Response) => {
     const { eventId } = req.params;
-    const user = req.user!;
 
     const userRegistration = await userRegistrationServices(
-      user,
+      req.user!,
       eventId as string
     );
 
@@ -32,10 +31,9 @@ export const userRegistrationController = asyncHandler(
 export const deleteUserRegistrationController = asyncHandler(
   async (req: Request, res: Response) => {
     const { eventId } = req.params;
-    const user = req.user!;
 
     const userUnregistration = await deleteUserRegistrationServices(
-      user,
+      req.user!,
       eventId as string
     );
 
@@ -50,16 +48,14 @@ export const getRegisteredEventController = asyncHandler(
     const { userId } = req.params;
     const page = req.query.page || 1;
     const offset = req.query.offset || 10;
-    const user = req.user!;
     const getRegisteredEvent = await getRegisteredEventServices(
       userId as string,
-      user,
+      req.user!,
       Number(page),
       Number(offset)
     );
 
-    if (getRegisteredEvent.length === 0)
-      throw new apiError(404, `user hasn't registered in any event`);
+   
     return resHandler(
       res,
       200,

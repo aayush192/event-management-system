@@ -28,6 +28,8 @@ export const getMeServices = async (user: userType) => {
     },
   });
 
+  if (!getUserData) throw new apiError(404, "failed to get user's own data");
+
   return getUserData;
 };
 
@@ -41,11 +43,13 @@ export const getUserByIdServices = async (id: string) => {
       registrations: { include: { event: true } },
       profile: true,
     },
+    omit: {
+      password:true
+    }
   });
-  if (!user) throw new apiError(404, "user havig this id not found");
+  if (!user) throw new apiError(404, "user not found");
 
-  const { password, ...userData } = user;
-  return userData;
+  return user;
 };
 
 //get users
@@ -62,7 +66,7 @@ export const getUserServices = async (page: number, pageSize: number) => {
     prisma.user.count(),
   ]);
 
-  if (!user) throw new apiError(404, "user data not found");
+  if (!user) throw new apiError(404, "users not found");
   const totalPage = totalUser / take;
   return {
     user,
@@ -220,8 +224,7 @@ export const deleteProfileImageServices = async (user: userType) => {
     },
   });
   if (!checkProfile?.publicId) throw new apiError(404, "profile not found");
-
-  const cloudinaryDelete = await cloudinaryRemoveImage(checkProfile.publicId);
+ await cloudinaryRemoveImage(checkProfile.publicId);
 
   const deleteProfile = await prisma.profile.update({
     where: {

@@ -25,7 +25,6 @@ import { resHandler } from "../utils/responseHandler";
 //get event
 export const getEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = req.user!;
     const searchValue = {
       name: req.query?.name,
       category: req.query?.category
@@ -42,7 +41,7 @@ export const getEventController = asyncHandler(
       Number(page),
       Number(offset),
       searchValue as searchEventType,
-      user
+      req.user!
     );
     return resHandler(
       res,
@@ -72,7 +71,7 @@ export const updateEventStatusController = asyncHandler(
     const data: updateEventStatusType = req.body;
     const updateEvent = await updateEventStatus(data);
 
-    return resHandler(res, 200, true, "status of the event successfully",updateEvent);
+    return resHandler(res, 200, true, "status of the event is updated successfully",updateEvent);
   }
 );
 
@@ -80,9 +79,8 @@ export const updateEventStatusController = asyncHandler(
 
 export const deleteEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = req.user!;
     const { eventId } = req.params;
-    const deleteEvent = await deleteEventServices(eventId as string, user);
+    const deleteEvent = await deleteEventServices(eventId as string, req.user!);
 
     return resHandler(res, 204, true, "event deleted successfully");
   }
@@ -126,9 +124,8 @@ export const getApprovedEventController = asyncHandler(
 export const getOrganizedEventcontroller = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    const user = req.user!;
     const getOrganizedEvent = await getOrganizedEventServices(
-      user,
+      req.user!,
       userId as string
     );
     return resHandler(
@@ -144,13 +141,12 @@ export const getOrganizedEventcontroller = asyncHandler(
 export const postEventImagesController = asyncHandler(
   async (req: Request, res: Response) => {
     const { eventId } = req.params;
-    const user = req.user!;
 
     if (!req.files) throw new apiError(400, "filepath missing");
     const files = req.files;
 
     const eventImage = await postEventImageServices(
-      user,
+      req.user!,
       files as Express.Multer.File[],
       eventId as string
     );
@@ -168,7 +164,6 @@ export const postEventImagesController = asyncHandler(
 //update event
 export const updateEventController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = req.user!;
     const { eventId } = req.params;
     if (Array.isArray(eventId))
       throw new apiError(400, "eventId can't be in array");
@@ -176,7 +171,7 @@ export const updateEventController = asyncHandler(
     const updateEvent = await updateEventServices(
       eventId,
       data as updateEventType,
-      user
+      req.user!
     );
     return resHandler(
       res,
@@ -195,10 +190,9 @@ export const deleteEventImagesController = asyncHandler(
     if (Array.isArray(eventImageId))
       throw new apiError(400, "params shouldn't be an array");
     console.log(eventImageId);
-    const user = req.user!;
     const deleteEventImage = await deleteEventImagesServices(
       eventImageId,
-      user
+      req.user!
     );
 
     return resHandler(res, 204, true, "event image deleted successfully");

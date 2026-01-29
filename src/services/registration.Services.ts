@@ -50,7 +50,7 @@ export const getRegisteredEventServices = async (
   pageSize: number
 ) => {
   if (user.role !== "ADMIN" && user.id !== userId)
-    throw new apiError(401, `user is not allowed`);
+    throw new apiError(401, `unauthorized`);
 
   const { currentPage, skip, take } = pagination(page, pageSize);
   const [event, totalEvent] = await prisma.$transaction([

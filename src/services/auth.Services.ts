@@ -74,8 +74,9 @@ export const authLoginServices = async (data: loginData) => {
   return { ...userData, accessToken, refreshToken };
 };
 
-//Register User
 
+
+//Register User
 export const authRegisterServices = async (
   data: registerUserType,
   file: Express.Multer.File,
@@ -197,7 +198,7 @@ export const passwordResetMailServices = async (email: string) => {
     },
   });
 
-  if (!checkUser) throw new apiError(400, `user with this email doesn't exist`);
+  if (!checkUser) throw new apiError(400, `user credentials doesn't match`);
 
   const emailSubject = "Reset Password";
   const emailMessage =
@@ -237,7 +238,7 @@ export const registerMailServices = async (email: string) => {
     baseUrl,
     purpose
   );
-  if (!info) throw new apiError(500, "unable to send otp");
+  if (!info) throw new apiError(500, "failed to send otp");
   return info;
 };
 
@@ -317,7 +318,7 @@ export const refreshAccessTokenServices = async (
   });
 
   if (!fetchedUserData)
-    throw new apiError(400, "user having this token is missing");
+    throw new apiError(400, "user having this token is not available");
 
   const getRole = await prisma.role.findUnique({
     where: {

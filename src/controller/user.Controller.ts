@@ -88,8 +88,7 @@ export const getRegisteredUserController = asyncHandler(
 export const deleteUserController = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    const user = req.user!;
-    const deleteUser = await deleteUserServices(userId as string, user);
+    const deleteUser = await deleteUserServices(userId as string, req.user!);
 
     return resHandler(res, 204, true, "user deleted successfully");
   }
@@ -99,8 +98,7 @@ export const deleteUserController = asyncHandler(
 export const updateUserController = asyncHandler(
   async (req: Request, res: Response) => {
     const userdata: updateUserType = req.body;
-    const user = req.user!;
-    const updateUser = await updateUserServices(user, userdata);
+    const updateUser = await updateUserServices(req.user!, userdata);
     return resHandler(res, 200, true, "user updated successfully");
   }
 );
@@ -109,18 +107,16 @@ export const updateProfileImageController = asyncHandler(
   async (req: Request, res: Response) => {
     if (!req.file) throw new apiError(401, `image not uploaded`);
     const file: Express.Multer.File = req.file;
-    const user = req.user!;
 
-    const updateProfileImage = await updateProfileImageServices(file, user);
+    const updateProfileImage = await updateProfileImageServices(file, req.user!);
 
     return resHandler(res, 200, true, "updated profile image successfully");
   }
 );
 export const deleteProfileImageController = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = req.user!;
 
-    const deleteProfileImage = await deleteProfileImageServices(user);
+    const deleteProfileImage = await deleteProfileImageServices(req.user!);
 
     return resHandler(res, 204, true, "deleted profile image successfully");
   }
@@ -129,8 +125,7 @@ export const deleteProfileImageController = asyncHandler(
 export const updateProfileController = asyncHandler(
   async (req: Request, res: Response) => {
     const data: updateProfileType = req.body;
-    const user = req.user!;
-    const updateProfile = await updateProfileServices(data, user);
+    const updateProfile = await updateProfileServices(data, req.user!);
     return resHandler(
       res,
       200,
