@@ -13,7 +13,7 @@ import {
   updateEventController,
   updateEventStatusController,
 } from "../controller/event.Controller";
-import { getEventByStatusServices } from "../services/event.Services";
+import { getEventByStatusServices } from "../services/event.services.js";
 import { upload } from "../middlewares/multer.js";
 import {
   validateBody,

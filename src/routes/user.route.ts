@@ -12,7 +12,7 @@ import {
 } from "../controller/user.controller";
 import { verifyTokenMiddleWare } from "../middlewares/auth.middleware.ts";
 import { verifyAllowedRoleMiddleWare } from "../middlewares/verifyAllowedRole";
-import { updateUserServices } from "../services/user.Services";
+import { updateUserServices } from "../services/user.services";
 import { upload } from "../middlewares/multer";
 import {
   validateBody,

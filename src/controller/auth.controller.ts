@@ -8,7 +8,7 @@ import {
   refreshAccessTokenServices,
   registerMailServices,
   resetPasswordServices,
-} from "../services/auth.Services";
+} from "../services/auth.services";
 import {
   changePasswordType,
   getOtpType,

@@ -10,7 +10,7 @@ import {
   postEventImageServices,
   deleteEventImagesServices,
   updateEventServices,
-} from "../services/event.Services";
+} from "../services/event.services";
 import apiError from "../utils/apiError";
 import {
   updateEventStatusType,

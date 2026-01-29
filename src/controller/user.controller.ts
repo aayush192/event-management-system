@@ -9,7 +9,7 @@ import {
   updateProfileImageServices,
   updateProfileServices,
   updateUserServices,
-} from "../services/user.Services";
+} from "../services/user.services";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
   updateProfileType,

@@ -3,7 +3,7 @@ import {
   getRegisteredEventServices,
   userRegistrationServices,
   deleteUserRegistrationServices,
-} from "../services/registration.Services";
+} from "../services/registration.services";
 import { asyncHandler } from "../utils/asyncHandler";
 import apiError from "../utils/apiError";
 import { resHandler } from "../utils/responseHandler";
