@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import fs from "fs/promises";
 import config from "../config/config";
 import apiError from "./apiError";
 
@@ -13,6 +14,8 @@ export const cloudianryUploadImage = async (fileToUpload: string) => {
     const data = await cloudinary.uploader.upload(fileToUpload, {
       resource_type: "auto",
     });
+
+    fs.unlink(fileToUpload);
     return data;
   } catch (err) {
     throw new apiError(500, JSON.stringify(err));

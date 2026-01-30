@@ -1,35 +1,37 @@
 import express from "express";
-import { verifyTokenMiddleWare } from "../middlewares/auth.middleware.ts.js";
-import { verifyAllowedRoleMiddleWare } from "../middlewares/verifyAllowedRole.js";
+
 import {
   deleteEventController,
   deleteEventImagesController,
-  getApprovedEventController,
+  getAllEventController,
   getEventByStatusController,
   getEventController,
-  getOrganizedEventcontroller,
+  getOrganizedEventController,
   postEventController,
   postEventImagesController,
   updateEventController,
   updateEventStatusController,
-} from "../controller/event.Controller";
-import { getEventByStatusServices } from "../services/event.services.js";
-import { upload } from "../middlewares/multer.js";
+} from "../controller";
+
 import {
   validateBody,
   validateParams,
   validateQuery,
-} from "../middlewares/validate.js";
+  verifyAllowedRoleMiddleWare,
+  verifyTokenMiddleWare,
+  upload,
+} from "../middlewares";
 import {
   createEventSchema,
   eventIdSchema,
   eventImageIdSchema,
-  searchEventSchema,
+  paginationSchema,
+  filterEventSchema,
   statusSchema,
   updateEventSchema,
   updateEventStatusSchema,
   userIdSchema,
-} from "../dataTypes/zod";
+} from "../schemas";
 
 const eventRoutes = express.Router();
 
@@ -37,15 +39,22 @@ eventRoutes.get(
   "/",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"),
-  validateQuery(searchEventSchema),
+  validateQuery(filterEventSchema),
   getEventController
 );
 eventRoutes.get(
-  "/organizedevent/:userId",
+  "/organized-event/:userId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
   validateParams(userIdSchema),
-  getOrganizedEventcontroller
+  validateQuery(paginationSchema),
+  getOrganizedEventController
+);
+eventRoutes.get(
+  "/all-event",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN"),
+  getAllEventController
 );
 eventRoutes.post(
   "/postevent",

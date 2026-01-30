@@ -8,9 +8,14 @@ import {
   resetPasswordController,
   registerMailController,
 } from "../controller";
-import { verifyTokenMiddleWare } from "../middlewares/auth.middleware.ts";
-import { verifyAllowedRoleMiddleWare } from "../middlewares/verifyAllowedRole";
-import { validateBody } from "../middlewares/validate";
+import {
+  validateBody,
+  validateParams,
+  validateQuery,
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare,
+  upload,
+} from "../middlewares";
 import {
   changePasswordSchema,
   getTokenSchema,
@@ -19,9 +24,8 @@ import {
   resetPasswordSchema,
   resetTokenSchema,
   verifyOtpSchema,
-} from "../dataTypes/zod";
+} from "../schemas";
 import { verify } from "node:crypto";
-import { upload } from "../middlewares/multer";
 
 const authRoutes = express.Router();
 

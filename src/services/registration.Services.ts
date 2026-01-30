@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { userType } from "../dataTypes/zod";
+import { userType } from "../schemas";
 import apiError from "../utils/apiError";
 import { pagination } from "../utils/pagination";
 import { number } from "zod";

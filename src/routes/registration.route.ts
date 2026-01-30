@@ -3,18 +3,16 @@ import {
   getRegisteredEventController,
   userRegistrationController,
   deleteUserRegistrationController,
-} from "../controller/registration.controller";
-import { verifyTokenMiddleWare } from "../middlewares/auth.middleware.ts";
-import { verifyAllowedRoleMiddleWare } from "../middlewares/verifyAllowedRole";
-import { validateQuery } from "../middlewares/validate";
-import { eventIdSchema, userIdSchema } from "../dataTypes/zod";
+} from "../controller";
+import { verifyTokenMiddleWare,validateBody,validateParams,verifyAllowedRoleMiddleWare } from "../middlewares";
+import { eventIdSchema, userIdSchema } from "../schemas";
 
 const registrationRoutes = express.Router();
 registrationRoutes.post(
   "/:eventId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  // validateQuery(eventIdSchema),
+   validateParams(eventIdSchema),
   userRegistrationController
 );
 
@@ -22,14 +20,14 @@ registrationRoutes.delete(
   "/delete/:eventId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  // validateQuery(eventIdSchema),
+  validateParams(eventIdSchema),
   deleteUserRegistrationController
 );
 registrationRoutes.get(
   "/registeredevent/:userId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
-  // validateQuery(userIdSchema),
+  validateParams(userIdSchema),
   getRegisteredEventController
 );
 

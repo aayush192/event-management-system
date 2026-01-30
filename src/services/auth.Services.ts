@@ -9,9 +9,10 @@ import {
   changePasswordType,
   refreshTokenType,
   registerUserType,
+  resetPasswordType,
   resetTokenType,
   userType,
-} from "../dataTypes/zod";
+} from "../schemas";
 import { cloudianryUploadImage } from "../utils/cloudinary";
 import crypto from "crypto";
 import { sendMail } from "../utils/email";
@@ -143,13 +144,12 @@ export const authRegisterServices = async (
       roleId: true,
     },
   });
-
   const { accessToken, refreshToken } = generateTokens({
     ...user,
     role: data.role,
   });
 
-  return { user, accessToken, refreshToken };
+  return { ...user, role: data.role, accessToken, refreshToken };
 };
 
 //change passswod
@@ -242,7 +242,7 @@ export const registerMailServices = async (email: string) => {
 //reset password
 export const resetPasswordServices = async (
   token: string,
-  newPassword: string
+  data: resetPasswordType
 ) => {
   const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
 
@@ -272,7 +272,7 @@ export const resetPasswordServices = async (
     },
   });
 
-  const hashedPassword = bcrypt.hashSync(newPassword, 10);
+  const hashedPassword = bcrypt.hashSync(data.new_password, 10);
   const resetPassword = await prisma.user.update({
     where: {
       email: checkToken.email,

@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { valiadateEnv } from "../dataTypes/zod";
+import { valiadateEnv } from "../schemas";
 import apiError from "../utils/apiError";
 dotenv.config({
   path: "./.env",

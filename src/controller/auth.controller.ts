@@ -8,7 +8,7 @@ import {
   refreshAccessTokenServices,
   registerMailServices,
   resetPasswordServices,
-} from "../services/auth.services";
+} from "../services";
 import {
   changePasswordType,
   getOtpType,
@@ -17,7 +17,7 @@ import {
   registerUserType,
   resetPasswordType,
   verifyOtpType,
-} from "../dataTypes/zod";
+} from "../schemas";
 import apiError from "../utils/apiError";
 import { resHandler } from "../utils/responseHandler";
 
@@ -62,8 +62,8 @@ export const resetPasswordEmailController = asyncHandler(
 export const resetPasswordController = asyncHandler(
   async (req: Request, res: Response) => {
     const token = req.query.token;
-    const user: resetPasswordType = req.body;
-    const info = await resetPasswordServices(token as string, user.newPassword);
+    const data: resetPasswordType = req.body;
+    const info = await resetPasswordServices(token as string, data);
     return resHandler(res, 200, true, "password changed successfully", info);
   }
 );

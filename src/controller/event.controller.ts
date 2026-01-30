@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import {
   deleteEventServices,
-  getApprovedEventServices,
-  getEventServices,
+  getAllEventServices,
+  filterEventServices,
   getEventByStatusServices,
   getOrganizedEventServices,
   postEventServices,
@@ -10,17 +10,19 @@ import {
   postEventImageServices,
   deleteEventImagesServices,
   updateEventServices,
-} from "../services/event.services";
+} from "../services";
 import apiError from "../utils/apiError";
 import {
   updateEventStatusType,
-  status,
+  statusType,
   searchEventType,
   updateEventType,
   createEventType,
-} from "../dataTypes/zod";
+  filterEventType,
+} from "../schemas";
 import { asyncHandler } from "../utils/asyncHandler";
 import { resHandler } from "../utils/responseHandler";
+import { number } from "zod";
 
 //get event
 export const getEventController = asyncHandler(
@@ -37,10 +39,10 @@ export const getEventController = asyncHandler(
     const page = req.query.page || 1;
     const offset = req.query.offset || 15;
 
-    const searchEvent = await getEventServices(
+    const { event, meta } = await filterEventServices(
       Number(page),
       Number(offset),
-      searchValue as searchEventType,
+      searchValue as filterEventType,
       req.user!
     );
     return resHandler(
@@ -48,10 +50,16 @@ export const getEventController = asyncHandler(
       200,
       true,
       "event retrived successfully",
-      searchEvent
+      event,
+      meta
     );
   }
 );
+
+export const searchEventController = asyncHandler(async () => {
+  
+})
+
 
 export const postEventController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -97,49 +105,61 @@ export const deleteEventController = asyncHandler(
 export const getEventByStatusController = asyncHandler(
   async (req: Request, res: Response) => {
     const { status } = req.params;
-    const page = req.query.page || 1;
-    const offset = req.query.offset || 20;
+    const page = req.query.page;
+    const offset = req.query.offset;
     const upperCaseStatus = Array.isArray(status)
       ? () => {
           throw new apiError(400, `got array of status`);
         }
       : status.toUpperCase();
-    const getEventByStatus = await getEventByStatusServices(
-      upperCaseStatus as status,
+    const { event, meta } = await getEventByStatusServices(
+      upperCaseStatus as statusType,
       Number(page),
       Number(offset)
     );
-    resHandler(res, 200, true, "event retrived successfully", getEventByStatus);
+    resHandler(res, 200, true, "event retrived successfully", event, meta);
   }
 );
 
-//get approved event
-export const getApprovedEventController = asyncHandler(
+//get all event
+export const getAllEventController = asyncHandler(
   async (req: Request, res: Response) => {
     const page = req.query.page || 1;
-    const offset = req.query.offset || 20;
-    const getApprovedEvent = await getApprovedEventServices(
+    const offset = req.query.offset || 10;
+    const { event, meta } = await getAllEventServices(
       Number(page),
       Number(offset)
-    );
-    return resHandler(res, 200, true, "event retrived successfully");
-  }
-);
-
-//get organized event
-export const getOrganizedEventcontroller = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const getOrganizedEvent = await getOrganizedEventServices(
-      req.user!,
-      userId as string
     );
     return resHandler(
       res,
       200,
       true,
       "event retrived successfully",
-      getOrganizedEvent
+      event,
+      meta
+    );
+  }
+);
+
+//get organized event
+export const getOrganizedEventController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const page = req.query.page;
+    const offset = req.query.offset;
+    const { event, meta } = await getOrganizedEventServices(
+      req.user!,
+      userId as string,
+      Number(page),
+      Number(offset)
+    );
+    return resHandler(
+      res,
+      200,
+      true,
+      "event retrived successfully",
+      event,
+      meta
     );
   }
 );

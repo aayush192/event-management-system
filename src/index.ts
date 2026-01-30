@@ -3,7 +3,7 @@ import config from "./config/config";
 import router from "./routes";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./utils/globalErrorHandler";
-import "./jobs/otpCleanUp.job";
+import "./utils/otpCleanUp.job";
 import morgan from "morgan";
 
 const app = express();

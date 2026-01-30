@@ -9,23 +9,23 @@ import {
   updateProfileController,
   updateProfileImageController,
   updateUserController,
-} from "../controller/user.controller";
-import { verifyTokenMiddleWare } from "../middlewares/auth.middleware.ts";
-import { verifyAllowedRoleMiddleWare } from "../middlewares/verifyAllowedRole";
-import { updateUserServices } from "../services/user.services";
-import { upload } from "../middlewares/multer";
+} from "../controller";
 import {
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare,
   validateBody,
-  validateParams,
   validateQuery,
-} from "../middlewares/validate";
+  validateParams,
+  upload,
+} from "../middlewares";
+
 import {
   eventIdSchema,
   paginationSchema,
   updateProfileSchema,
   updateUserSchema,
   userIdSchema,
-} from "../dataTypes/zod";
+} from "../schemas";
 const userRoutes = express.Router();
 
 userRoutes.get(

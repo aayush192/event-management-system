@@ -9,14 +9,14 @@ import {
   updateProfileImageServices,
   updateProfileServices,
   updateUserServices,
-} from "../services/user.services";
+} from "../services";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
   updateProfileType,
   updateUserType,
   userSchema,
   userType,
-} from "../dataTypes/zod";
+} from "../schemas";
 import apiError from "../utils/apiError";
 import multer from "multer";
 import { resHandler } from "../utils/responseHandler";
@@ -41,22 +41,22 @@ export const getUserController = asyncHandler(
   async (req: Request, res: Response) => {
     const page = req.query.page || 1;
     const offset = req.query.offset || 15;
-    const getUser = await getUserServices(Number(page), Number(offset));
+    const { data, meta } = await getUserServices(Number(page), Number(offset));
 
-    return resHandler(res, 200, true, "user retrived successfully", getUser);
+    return resHandler(res, 200, true, "user retrived successfully", data,meta);
   }
 );
 
 export const getMeController = asyncHandler(
   async (req: Request, res: Response) => {
-    const getOwnData = await getMeServices(req.user!);
+    const user = await getMeServices(req.user!);
 
     return resHandler(
       res,
       200,
       true,
       "retrived own data successfully",
-      getOwnData
+      user
     );
   }
 );
@@ -67,7 +67,7 @@ export const getRegisteredUserController = asyncHandler(
     const page = Number(req.query.page) || 1;
     const offset = Number(req.query.offset) || 15;
 
-    const getRegisteredUser = await getRegisteredUserServices(
+    const {data,meta} = await getRegisteredUserServices(
       eventId as string,
       req.user!,
       page,
@@ -79,7 +79,8 @@ export const getRegisteredUserController = asyncHandler(
       200,
       true,
       "user retrived successfully",
-      getRegisteredUser
+      data,
+      meta
     );
   }
 );

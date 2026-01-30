@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { updateProfileType, updateUserType, userType } from "../dataTypes/zod";
+import { updateProfileType, updateUserType, userType } from "../schemas";
 import { prisma } from "../config/prisma";
 import apiError from "../utils/apiError";
 import {
@@ -10,6 +10,7 @@ import {
 import { pagination } from "../utils/pagination";
 import { checkRoleUtility } from "../utils/roleCheck";
 
+//get me
 export const getMeServices = async (user: userType) => {
   const getUserData = await prisma.user.findUnique({
     select: {
@@ -97,8 +98,8 @@ export const getUserServices = async (page: number, pageSize: number) => {
 
   const totalPage = totalUser / take;
   return {
-    user: userWithProfile,
-    pagination: {
+    data: userWithProfile,
+    meta: {
       page: currentPage,
       pageSize: take,
       totalCount: totalUser,
@@ -164,8 +165,8 @@ export const getRegisteredUserServices = async (
 
   const totalPage = totalRegisteredUser / take;
   return {
-    registeredUserWithProfile,
-    pagination: {
+    data:registeredUserWithProfile,
+    meta: {
       page: currentPage,
       pageSize: take,
       totalCount: totalRegisteredUser,
@@ -266,7 +267,6 @@ export const updateProfileImageServices = async (
 
   if (!updateImage) throw new apiError(500, "error while updating data");
 
-  fs.unlink(file.path);
   return updateImage;
 };
 

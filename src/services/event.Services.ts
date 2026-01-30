@@ -3,32 +3,30 @@ import fs from "fs/promises";
 import apiError from "../utils/apiError";
 import {
   createEventType,
+  filterEventType,
   searchEventType,
-  status,
+  statusType,
   updateEventStatusType,
   updateEventType,
   userType,
-} from "../dataTypes/zod";
+} from "../schemas";
 import {
   cloudianryUploadImage,
   cloudinaryRemoveImage,
   cloudinaryRemoveMultipleImage,
   cloudinaryGetImage,
 } from "../utils/cloudinary";
-import { deleteEventImagesController } from "../controller/event.Controller";
 import { pagination } from "../utils/pagination";
 
-//get event by search
-export const getEventServices = async (
+//filter Event
+export const filterEventServices = async (
   page: number,
   pageSize: number,
-  SearchValue: searchEventType,
+  SearchValue: filterEventType,
   user: userType
 ) => {
   const { currentPage, skip, take } = pagination(page, pageSize);
 
-  if (user.role !== "admin") {
-  }
   const [searchEvent, totalEvent] = await prisma.$transaction([
     prisma.event.findMany({
       skip,
@@ -43,6 +41,7 @@ export const getEventServices = async (
     prisma.event.count({
       where: {
         ...SearchValue,
+        status: "APPROVED",
       },
     }),
   ]);
@@ -62,8 +61,68 @@ export const getEventServices = async (
   const totalPage = totalEvent / take;
 
   return {
-    eventWithImage,
-    pagination: {
+    event: eventWithImage,
+    meta: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalEvent,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 1,
+    },
+  };
+};
+
+//search event
+export const searchEvent = async (
+  page: number,
+  pageSize: number,
+  searchValue: searchEventType,
+  user: userType
+) => {
+  const { currentPage, skip, take } = pagination(page, pageSize);
+
+  const [searchEvent, totalEvent] = await prisma.$transaction([
+    prisma.event.findMany({
+      skip,
+      take,
+      where: {
+        OR: [
+          { name: { contains: searchValue, mode: "insensitive" } },
+          { description: { contains: searchValue, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        eventImage: true,
+      },
+    }),
+    prisma.event.count({
+      where: {
+        OR: [
+          { name: { contains: searchValue, mode: "insensitive" } },
+          { description: { contains: searchValue, mode: "insensitive" } },
+        ],
+      },
+    }),
+  ]);
+
+  if (searchEvent.length === 0) throw new apiError(404, "failed get event");
+
+  const eventWithImage = searchEvent.map((event) => {
+    return {
+      ...event,
+      coverImageUrl: cloudinaryGetImage(event.publicId),
+      eventImage: event.eventImage.map((image) => {
+        return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+      }),
+    };
+  });
+
+  const totalPage = totalEvent / take;
+
+  return {
+    event: eventWithImage,
+    meta: {
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
@@ -98,7 +157,6 @@ export const postEventServices = async (
     await cloudinaryRemoveImage(uploadCoverImage.public_id);
     throw new apiError(500, "failed to add event");
   }
-  fs.unlink(file.path);
   return event;
 };
 
@@ -178,7 +236,7 @@ export const updateEventServices = async (
 
 //getEventByStatus
 export const getEventByStatusServices = async (
-  status: status,
+  status: statusType,
   page: number,
   pageSize: number
 ) => {
@@ -214,8 +272,8 @@ export const getEventByStatusServices = async (
 
   const totalPage = totalEvent / take;
   return {
-    eventWithImage,
-    pagination: {
+    event: eventWithImage,
+    meta: {
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
@@ -226,31 +284,21 @@ export const getEventByStatusServices = async (
   };
 };
 
-//approved events for user
-export const getApprovedEventServices = async (
-  page: number,
-  pageSize: number
-) => {
+//get All Event
+export const getAllEventServices = async (page: number, pageSize: number) => {
   const { currentPage, skip, take } = pagination(page, pageSize);
   const [approvedEvent, totalEvent] = await prisma.$transaction([
     prisma.event.findMany({
       skip,
       take,
-      where: {
-        status: "APPROVED",
-      },
       include: {
         eventImage: true,
       },
     }),
-    prisma.event.count({
-      where: {
-        status: "APPROVED",
-      },
-    }),
+    prisma.event.count(),
   ]);
   if (approvedEvent.length === 0)
-    throw new apiError(400, `event of this status not available`);
+    throw new apiError(404, `event not available`);
 
   const eventWithImage = approvedEvent.map((event) => {
     return {
@@ -261,11 +309,10 @@ export const getApprovedEventServices = async (
       }),
     };
   });
-
   const totalPage = totalEvent / take;
   return {
-    eventWithImage,
-    pagination: {
+    event: eventWithImage,
+    meta: {
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
@@ -279,18 +326,28 @@ export const getApprovedEventServices = async (
 //organized Event
 export const getOrganizedEventServices = async (
   user: userType,
-  userId: string
+  userId: string,
+  page: number,
+  pageSize: number
 ) => {
   if (user.role === "ORGANIZER" && userId !== user.id)
-    throw new apiError(401, `can't retrive the events`);
-  const organizedEvent = await prisma.event.findMany({
-    where: {
-      userId: userId,
-    },
-    include: {
-      eventImage: true,
-    },
-  });
+    throw new apiError(403, `can't retrive the events`);
+
+  const { currentPage, skip, take } = pagination(page, pageSize);
+
+  const [organizedEvent, totalEvent] = await prisma.$transaction([
+    prisma.event.findMany({
+      where: {
+        userId: userId,
+      },
+      skip,
+      take,
+      include: {
+        eventImage: true,
+      },
+    }),
+    prisma.event.count(),
+  ]);
   if (organizedEvent.length === 0)
     throw new apiError(400, `doesn't have any organized event`);
 
@@ -303,7 +360,18 @@ export const getOrganizedEventServices = async (
       }),
     };
   });
-  return eventWithImage;
+  const totalPage = totalEvent / pageSize;
+  return {
+    event: eventWithImage,
+    meta: {
+      page: currentPage,
+      pageSize: take,
+      totalCount: totalEvent,
+      totalPage,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 1,
+    },
+  };
 };
 
 //postEventImage
@@ -339,17 +407,12 @@ export const postEventImageServices = async (
     for (const image of imageData) {
       await cloudinaryRemoveImage(image.publicId);
     }
-    filePath.forEach((path) => {
-      fs.unlink(path);
-    });
     throw new apiError(500, "failed to add event image");
   }
-  filePath.forEach((path) => {
-    fs.unlink(path);
-  });
   return uploadImage;
 };
 
+//delete Event Image
 export const deleteEventImagesServices = async (
   eventImageId: string,
   user: userType

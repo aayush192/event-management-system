@@ -3,7 +3,7 @@ import {
   getRegisteredEventServices,
   userRegistrationServices,
   deleteUserRegistrationServices,
-} from "../services/registration.services";
+} from "../services";
 import { asyncHandler } from "../utils/asyncHandler";
 import apiError from "../utils/apiError";
 import { resHandler } from "../utils/responseHandler";
@@ -55,7 +55,6 @@ export const getRegisteredEventController = asyncHandler(
       Number(offset)
     );
 
-   
     return resHandler(
       res,
       200,
