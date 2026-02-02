@@ -4,6 +4,7 @@ import {
   authLoginServices,
   authRegisterServices,
   changePasswordServices,
+  logOutServices,
   passwordResetMailServices,
   refreshAccessTokenServices,
   registerMailServices,
@@ -75,5 +76,17 @@ export const refreshAccessTokenController = asyncHandler(
     if (!refreshToken) throw new apiError(400, "missing refresh token");
     const info = await refreshAccessTokenServices(refreshToken);
     return resHandler(res, 200, true, "token refreshed successfully", info);
+  }
+);
+
+export const logOutController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const authheader = req.headers.authorization;
+    if (!authheader || !authheader.startsWith("Bearer")) {
+      return res.status(401).json({ success: false, message: "unauthorized" });
+    }
+    const token = authheader?.split(" ")[1];
+    await logOutServices(token);
+    resHandler(res, 200, true, "you have logged out successfully");
   }
 );

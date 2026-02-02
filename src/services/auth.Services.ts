@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { Jwt } from "jsonwebtoken";
 import { prisma } from "../config/prisma.config";
 import config from "../config/config";
 import apiError from "../utils/apiError.utils";
@@ -13,11 +13,13 @@ import {
   resetTokenType,
   userType,
 } from "../schemas";
-import { cloudianryUploadImage } from "../utils/cloudinary.utils";
+import {
+  cloudianryUploadImage,
+  sendMail,
+  addMailInQueue,
+  emailDetailUtils,
+} from "../utils";
 import crypto from "crypto";
-import { sendMail } from "../utils/sendEmail.utils";
-import { emailDetailUtils } from "../utils/emailDetail.utils";
-import { addMailInQueue } from "../utils";
 
 interface loginData {
   email: string;
@@ -353,4 +355,17 @@ export const refreshAccessTokenServices = async (
   });
 
   return { accessToken, refreshToken };
+};
+
+export const logOutServices = async (token: string) => {
+  const decoded = jwt.decode(token) as jwt.JwtPayload;
+  const exp = decoded.exp!;
+  console.log(exp);
+  const blacklistToken = await prisma.blackList.create({
+    data: {
+      token: token,
+      expiresAt: new Date(exp * 1000),
+    },
+  });
+  if (!blacklistToken) throw new apiError(404, "LogOut failed");
 };

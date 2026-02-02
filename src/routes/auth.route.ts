@@ -7,6 +7,7 @@ import {
   registerUserController,
   resetPasswordController,
   registerMailController,
+  logOutController,
 } from "../controller";
 import {
   validateBody,
@@ -43,11 +44,17 @@ authRoutes.post(
   registerUserController
 );
 authRoutes.patch(
-  "/changepassword",
+  "/change-password",
   validateBody(changePasswordSchema),
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   changePasswordController
+);
+authRoutes.post(
+  "/log-out",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  logOutController
 );
 authRoutes.post(
   "/forget-password",
@@ -59,6 +66,6 @@ authRoutes.patch(
   validateBody(resetPasswordSchema),
   resetPasswordController
 );
-authRoutes.patch("/refreshtoken", refreshAccessTokenController);
+authRoutes.patch("/refresh-token", refreshAccessTokenController);
 
 export default authRoutes;

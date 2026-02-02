@@ -86,6 +86,7 @@ model Event {
   eventImage    EventImage[]
 
   @@index([name])
+  @@index([eventdate])
 }
 
 model EventImage {
@@ -119,4 +120,11 @@ model mailToken {
   isUsed      Boolean  @default(false)
 
   @@unique([email, hashedToken, purpose])
+}
+
+model blackList {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
