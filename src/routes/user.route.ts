@@ -3,6 +3,7 @@ import {
   deleteProfileImageController,
   deleteUserController,
   getMeController,
+  getOrganizerController,
   getRegisteredUserController,
   getUserByIdController,
   getUserController,
@@ -47,13 +48,6 @@ userRoutes.get(
 );
 
 userRoutes.get(
-  "/user/:userId",
-  verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ADMIN"),
-  validateParams(userIdSchema),
-  getUserByIdController
-);
-userRoutes.get(
   "/user/registered/:eventId",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"),
@@ -68,6 +62,21 @@ userRoutes.patch(
   verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
   validateBody(updateUserSchema),
   updateUserController
+);
+userRoutes.get(
+  "/user/organizer",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"),
+  validateQuery(paginationSchema),
+  getOrganizerController
+);
+
+userRoutes.get(
+  "/user/:userId",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ADMIN"),
+  validateParams(userIdSchema),
+  getUserByIdController
 );
 
 userRoutes.delete(

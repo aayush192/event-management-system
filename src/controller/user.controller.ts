@@ -3,6 +3,7 @@ import {
   deleteProfileImageServices,
   deleteUserServices,
   getMeServices,
+  getOrganizerServices,
   getRegisteredUserServices,
   getUserByIdServices,
   getUserServices,
@@ -20,6 +21,7 @@ import {
 import apiError from "../utils/apiError.utils";
 import multer from "multer";
 import { resHandler } from "../utils/responseHandler.utils";
+import { number } from "zod";
 
 //get user by id
 export const getUserByIdController = asyncHandler(
@@ -123,5 +125,19 @@ export const updateProfileController = asyncHandler(
       "profile updated successfully",
       updateProfile
     );
+  }
+);
+
+export const getOrganizerController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = req.query.page || 1;
+    const offset = req.query.offset || 20;
+
+    const { data, meta } = await getOrganizerServices(
+      Number(page),
+      Number(offset)
+    );
+
+    resHandler(res, 200, true, "organizer retrived successfully", data, meta);
   }
 );

@@ -311,3 +311,57 @@ export const updateProfileServices = async (
   if (!updateProfile) throw new apiError(500, "error while updating profile");
   return updateProfile;
 };
+
+export const getOrganizerServices = async (page: number, pageSize: number) => {
+  const { currentPage, take, skip } = pagination(page, pageSize);
+
+  const role = await prisma.role.findFirst({
+    where: {
+      role: "organizer",
+    },
+  });
+  const [getOrganizer, totalOrganizer] = await prisma.$transaction([
+    prisma.user.findMany({
+      skip,
+      take,
+      where: {
+        roleId: role?.id,
+      },
+      include: {
+        _count: {
+          select: {
+            events: {
+              where: {
+                status: "APPROVED",
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        events: {
+          _count: "desc",
+        },
+      },
+    }),
+    prisma.user.count({
+      where: {
+        roleId: role?.id,
+      },
+    }),
+  ]);
+
+  const totalPage = totalOrganizer / take;
+
+  return {
+    data: getOrganizer,
+    meta: {
+      page: currentPage,
+      pageSize: take,
+      totalPage,
+      totalCount: totalOrganizer,
+      hasNext: currentPage < totalPage,
+      hasPrevious: currentPage > 0,
+    },
+  };
+};
