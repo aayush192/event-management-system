@@ -61,6 +61,8 @@ model Profile {
   publicId    String?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Role {
@@ -73,7 +75,7 @@ model Event {
   id            String         @id @default(uuid())
   name          String
   description   String
-  postDate      DateTime       @default(now())
+  createdAt      DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   eventdate     DateTime
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -94,6 +96,7 @@ model EventImage {
   publicId String
   event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId  String
+  createdAt DateTime @default(now())
 
   @@index(eventId)
 }
@@ -117,6 +120,7 @@ model mailToken {
   purpose     Purpose
   expiresAt   DateTime
   createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
   isUsed      Boolean  @default(false)
 
   @@unique([email, hashedToken, purpose])
@@ -127,4 +131,5 @@ model blackList {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
