@@ -57,7 +57,7 @@ eventRoutes.get(
   getAllEventController
 );
 eventRoutes.post(
-  "/postevent",
+  "/post-event",
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
   upload.single("coverImage"),

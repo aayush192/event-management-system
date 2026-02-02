@@ -4,14 +4,17 @@ import config from "../config/config";
 import apiError from "./apiError.utils";
 import { sendMail } from "./sendEmail.utils";
 import { queueConnection, workerConnection } from "../config";
-const myQueue = new Queue("emailQueue", { connection: queueConnection });
+const authQueue = new Queue("authQueue", { connection: queueConnection });
+const registeredQueue = new Queue("registeredQueue", {
+  connection: queueConnection,
+});
 
 export const addMailInQueue = async (
   email: string,
   subject: string,
   html: string
 ) => {
-  await myQueue.add(
+  await authQueue.add(
     subject,
     {
       email,
@@ -29,7 +32,7 @@ export const addMailInQueue = async (
 };
 
 const worker = new Worker(
-  "emailQueue",
+  "authQueue",
   async (Job) => {
     const { email, html } = Job.data;
     const subject = Job.name;
@@ -44,7 +47,3 @@ const worker = new Worker(
     connection: workerConnection,
   }
 );
-
-
-
-

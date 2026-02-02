@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma.config";
 import { userType } from "../schemas";
+import { addMailInQueue } from "../utils";
 import apiError from "../utils/apiError.utils";
 import { pagination } from "../utils/pagination.utils";
 import { number } from "zod";
@@ -14,12 +15,43 @@ export const userRegistrationServices = async (user: userType, id: string) => {
   if (checkEventStatus?.status !== "APPROVED") {
     throw new apiError(401, `Event is not approved`);
   }
+
+  if (user.id === checkEventStatus.userId)
+    throw new apiError(403, "forbidden to register in own event");
   const userRegistration = await prisma.registration.create({
     data: {
       userId: user.id,
       eventId: id,
     },
   });
+
+  const email = user.email;
+  const subject = `Event Registration Confirmation`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Event Registration Confirmation</title>
+</head>
+<body>
+  <p>Hi ${user.name},</p>
+
+  <p>Thank you for registering for the event: <strong>${checkEventStatus.name}</strong>.</p>
+
+  <p><strong>Event Details:</strong></p>
+  <ul>
+    <li>Date: ${checkEventStatus.eventdate}</li>
+    <li>Location: ${checkEventStatus.location}</li>
+  </ul>
+
+  <p>We look forward to seeing you!</p>
+
+  <p>Regards,<br>EMS</p>
+</body>
+</html>
+`;
+
+  await addMailInQueue(email, subject, html);
   return userRegistration;
 };
 

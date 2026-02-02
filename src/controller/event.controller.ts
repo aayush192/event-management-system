@@ -56,16 +56,15 @@ export const getEventController = asyncHandler(
   }
 );
 
-export const searchEventController = asyncHandler(async () => {});
+//export const searchEventController = asyncHandler(async () => {});
 
 export const postEventController = asyncHandler(
   async (req: Request, res: Response) => {
     const data: createEventType = req.body;
-    const userId = req.user!.id;
     if (!req.file) throw new apiError(400, "cover image missing");
 
     const file = req.file;
-    const event = await postEventServices(data, file, userId);
+    const event = await postEventServices(data, file, req.user!);
 
     return resHandler(res, 201, true, "post created Successfully", event);
   }

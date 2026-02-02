@@ -81,6 +81,7 @@ model Event {
   category      EventCategory  @default(OTHER)
   publicId      String
   userId        String
+  location      String
   registrations Registration[]
   eventImage    EventImage[]
 

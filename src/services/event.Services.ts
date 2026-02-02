@@ -9,6 +9,7 @@ import {
   updateEventStatusType,
   updateEventType,
   userType,
+  createEventSchema,
 } from "../schemas";
 import {
   cloudianryUploadImage,
@@ -17,6 +18,7 @@ import {
   cloudinaryGetImage,
 } from "../utils/cloudinary.utils";
 import { pagination } from "../utils/pagination.utils";
+import { addMailInQueue, localToUtcTime } from "../utils";
 
 //filter Event
 export const filterEventServices = async (
@@ -137,19 +139,23 @@ export const searchEventServices = async (
 export const postEventServices = async (
   data: createEventType,
   file: Express.Multer.File,
-  userId: string
+  user: userType
 ) => {
   if (!file.path) throw new apiError(400, `file path not available`);
   const uploadCoverImage = await cloudianryUploadImage(file.path);
-
+  const date = new Date(data.eventdate);
+  const [hours, minutes] = data.startTime.split(":").map(Number);
+  date.setHours(hours);
+  date.setMinutes(minutes);
   const event = await prisma.event.create({
     data: {
       name: data.name,
       description: data.description,
-      eventdate: new Date(data.eventdate),
+      eventdate: date.toISOString(),
       category: data.category,
       publicId: uploadCoverImage.public_id,
-      userId: userId,
+      location: data.location,
+      userId: user.id,
     },
   });
 
@@ -157,6 +163,16 @@ export const postEventServices = async (
     await cloudinaryRemoveImage(uploadCoverImage.public_id);
     throw new apiError(500, "failed to add event");
   }
+  const subject = "Event Registration Successful!";
+  const email = user.email; // user's email
+  const html = `<p>Hi Organizer,</p>
+      <p>Your event <strong>${event.name}</strong> has been successfully created.</p>
+      <p>We will notify after the event is approved</p>
+      <p><strong>Event Date:</strong> ${event.eventdate}</p>
+      <p>Thank you for using EMS!</p>
+`;
+
+  addMailInQueue(email, subject, html);
   return event;
 };
 
@@ -172,6 +188,24 @@ export const updateEventStatus = async (data: updateEventStatusType) => {
   });
 
   if (!updateEvent) throw new apiError(500, "failed to update event status");
+  const organizerDetail = await prisma.user.findUnique({
+    where: {
+      id: updateEvent.userId,
+    },
+  });
+
+  if (organizerDetail) {
+    const subject = `Event Status Update`;
+    const email = organizerDetail?.email;
+    const html = `  <h2>Event is ${updateEvent.status}</h2>
+    <p>Hi <strong>${organizerDetail.name}</strong>,</p>
+    <p>The status of your event <strong>${updateEvent.name}</strong> has changed.</p>
+    <p><strong>New Status:</strong> ${updateEvent.status}</p>
+    <p>Event Date: ${updateEvent.eventdate}</p>
+    <p>Thank you!</p>`;
+
+    await addMailInQueue(email, subject, html);
+  }
   return updateEvent;
 };
 

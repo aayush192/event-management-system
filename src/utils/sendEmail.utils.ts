@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import apiError from "./apiError.utils";
 import config from "../config/config";
-import {transporter} from '../config'
+import { transporter } from "../config";
 
 export const sendMail = async (
   email: string,
@@ -9,7 +9,7 @@ export const sendMail = async (
   html: string
 ) => {
   try {
-    console.log(email)
+    console.log(email);
     const info = await transporter.sendMail({
       from: config.EMAIL,
       to: email,

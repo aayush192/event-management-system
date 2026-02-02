@@ -17,6 +17,7 @@ import { cloudianryUploadImage } from "../utils/cloudinary.utils";
 import crypto from "crypto";
 import { sendMail } from "../utils/sendEmail.utils";
 import { emailDetailUtils } from "../utils/emailDetail.utils";
+import { addMailInQueue } from "../utils";
 
 interface loginData {
   email: string;
@@ -148,6 +149,20 @@ export const authRegisterServices = async (
     ...user,
     role: data.role,
   });
+
+  const subject = "Welcome to EMS";
+  const email = user.email; // the user's email
+  const html = `<p>Hi Aayush,</p>
+
+<p>Thank you for registering with EMS!</p>
+
+<p>Your account has been successfully created. You can now log in and start exploring our features.</p>
+
+<p>Welcome aboard!<br>
+The EMS Team</p>
+`;
+
+  await addMailInQueue(email, subject, html);
 
   return { ...user, role: data.role, accessToken, refreshToken };
 };

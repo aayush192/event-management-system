@@ -10,3 +10,4 @@ export * from "./otpCleanUp.utils";
 export * from "./pagination.utils";
 export * from "./responseHandler.utils";
 export * from "./roleCheck.utils";
+export * from "./localTimeToUtc.utils";

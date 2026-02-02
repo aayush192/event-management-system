@@ -16,18 +16,22 @@ export const createEventSchema = z.object({
     "MUSIC",
     "OTHER",
   ]),
+  location: z.string(),
+  startTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Time must be in HH:MM format"),
 });
 
 export const categorySchema = z.enum([
-    "CONFERENCE",
-    "WORKSHOP",
-    "MEETUP",
-    "WEBINAR",
-    "SEMINAR",
-    "SOCIAL",
-    "SPORTS",
-    "MUSIC",
-    "OTHER",
+  "CONFERENCE",
+  "WORKSHOP",
+  "MEETUP",
+  "WEBINAR",
+  "SEMINAR",
+  "SOCIAL",
+  "SPORTS",
+  "MUSIC",
+  "OTHER",
 ]);
 
 export const filterEventSchema = z.object({
