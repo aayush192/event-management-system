@@ -4,9 +4,9 @@ import {
   userRegistrationServices,
   deleteUserRegistrationServices,
 } from "../services";
-import { asyncHandler } from "../utils/asyncHandler";
-import apiError from "../utils/apiError";
-import { resHandler } from "../utils/responseHandler";
+import { asyncHandler } from "../utils/asyncHandler.utils";
+import apiError from "../utils/apiError.utils";
+import { resHandler } from "../utils/responseHandler.utils";
 export const userRegistrationController = asyncHandler(
   async (req: Request, res: Response) => {
     const { eventId } = req.params;

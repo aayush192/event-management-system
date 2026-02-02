@@ -2,8 +2,8 @@ import express from "express";
 import config from "./config/config";
 import router from "./routes";
 import cookieParser from "cookie-parser";
-import { errorHandler } from "./utils/globalErrorHandler";
-import "./utils/otpCleanUp.job";
+import { errorHandler } from "./utils/globalErrorHandler.utils";
+import "./utils/otpCleanUp.utils";
 import morgan from "morgan";
 
 const app = express();

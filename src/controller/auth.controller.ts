@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.utils";
 import {
   authLoginServices,
   authRegisterServices,
@@ -18,8 +18,8 @@ import {
   resetPasswordType,
   verifyOtpType,
 } from "../schemas";
-import apiError from "../utils/apiError";
-import { resHandler } from "../utils/responseHandler";
+import apiError from "../utils/apiError.utils";
+import { resHandler } from "../utils/responseHandler.utils";
 
 export const registerMailController = async (req: Request, res: Response) => {
   const data: getTokenType = req.body;

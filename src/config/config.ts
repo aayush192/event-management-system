@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { valiadateEnv } from "../schemas";
-import apiError from "../utils/apiError";
+import apiError from "../utils/apiError.utils";
 dotenv.config({
   path: "./.env",
   quiet: true,
@@ -22,4 +22,7 @@ export default {
 
   EMAIL: env.EMAIL,
   PASSWORD: env.PASSWORD,
+
+  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_PORT: process.env.REDIS_PORT,
 };

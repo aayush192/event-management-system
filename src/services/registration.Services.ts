@@ -1,7 +1,7 @@
-import { prisma } from "../config/prisma";
+import { prisma } from "../config/prisma.config";
 import { userType } from "../schemas";
-import apiError from "../utils/apiError";
-import { pagination } from "../utils/pagination";
+import apiError from "../utils/apiError.utils";
+import { pagination } from "../utils/pagination.utils";
 import { number } from "zod";
 //user registration
 export const userRegistrationServices = async (user: userType, id: string) => {

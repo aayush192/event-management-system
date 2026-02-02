@@ -10,16 +10,16 @@ import {
   updateProfileServices,
   updateUserServices,
 } from "../services";
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.utils";
 import {
   updateProfileType,
   updateUserType,
   userSchema,
   userType,
 } from "../schemas";
-import apiError from "../utils/apiError";
+import apiError from "../utils/apiError.utils";
 import multer from "multer";
-import { resHandler } from "../utils/responseHandler";
+import { resHandler } from "../utils/responseHandler.utils";
 
 //get user by id
 export const getUserByIdController = asyncHandler(
@@ -43,7 +43,7 @@ export const getUserController = asyncHandler(
     const offset = req.query.offset || 15;
     const { data, meta } = await getUserServices(Number(page), Number(offset));
 
-    return resHandler(res, 200, true, "user retrived successfully", data,meta);
+    return resHandler(res, 200, true, "user retrived successfully", data, meta);
   }
 );
 
@@ -51,13 +51,7 @@ export const getMeController = asyncHandler(
   async (req: Request, res: Response) => {
     const user = await getMeServices(req.user!);
 
-    return resHandler(
-      res,
-      200,
-      true,
-      "retrived own data successfully",
-      user
-    );
+    return resHandler(res, 200, true, "retrived own data successfully", user);
   }
 );
 
@@ -67,21 +61,14 @@ export const getRegisteredUserController = asyncHandler(
     const page = Number(req.query.page) || 1;
     const offset = Number(req.query.offset) || 15;
 
-    const {data,meta} = await getRegisteredUserServices(
+    const { data, meta } = await getRegisteredUserServices(
       eventId as string,
       req.user!,
       page,
       offset
     );
 
-    return resHandler(
-      res,
-      200,
-      true,
-      "user retrived successfully",
-      data,
-      meta
-    );
+    return resHandler(res, 200, true, "user retrived successfully", data, meta);
   }
 );
 

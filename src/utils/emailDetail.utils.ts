@@ -1,7 +1,8 @@
 import crypto from "crypto";
-import { prisma } from "../config/prisma";
-import apiError from "./apiError";
-import { sendMail } from "./email";
+import { prisma } from "../config/prisma.config";
+import apiError from "./apiError.utils";
+import { sendMail } from "./sendEmail.utils";
+import { addMailInQueue } from "./emailQueue.utils";
 export const emailDetailUtils = async (
   email: string,
   subject: string,
@@ -43,6 +44,6 @@ export const emailDetailUtils = async (
 </body>
 </html>`;
 
-  const info = await sendMail(email, subject, html);
+  const info = await addMailInQueue(email, subject, html);
   return info;
 };

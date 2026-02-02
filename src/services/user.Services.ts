@@ -1,14 +1,14 @@
 import fs from "fs/promises";
 import { updateProfileType, updateUserType, userType } from "../schemas";
-import { prisma } from "../config/prisma";
-import apiError from "../utils/apiError";
+import { prisma } from "../config/prisma.config";
+import apiError from "../utils/apiError.utils";
 import {
   cloudianryUploadImage,
   cloudinaryGetImage,
   cloudinaryRemoveImage,
-} from "../utils/cloudinary";
-import { pagination } from "../utils/pagination";
-import { checkRoleUtility } from "../utils/roleCheck";
+} from "../utils/cloudinary.utils";
+import { pagination } from "../utils/pagination.utils";
+import { checkRoleUtility } from "../utils/roleCheck.utils";
 
 //get me
 export const getMeServices = async (user: userType) => {
@@ -165,7 +165,7 @@ export const getRegisteredUserServices = async (
 
   const totalPage = totalRegisteredUser / take;
   return {
-    data:registeredUserWithProfile,
+    data: registeredUserWithProfile,
     meta: {
       page: currentPage,
       pageSize: take,

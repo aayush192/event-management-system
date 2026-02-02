@@ -1,4 +1,4 @@
-import { prisma } from "../config/prisma";
+import { prisma } from "../config/prisma.config";
 export const checkRoleUtility = async (roleId: string) => {
   const checkRole = await prisma.role.findUnique({
     where: {

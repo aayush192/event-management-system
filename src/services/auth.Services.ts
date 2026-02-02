@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "../config/prisma";
+import { prisma } from "../config/prisma.config";
 import config from "../config/config";
-import apiError from "../utils/apiError";
-import { generateTokens } from "../utils/generateTokens";
-import { checkRoleUtility } from "../utils/roleCheck";
+import apiError from "../utils/apiError.utils";
+import { generateTokens } from "../utils/generateTokens.utils";
+import { checkRoleUtility } from "../utils/roleCheck.utils";
 import {
   changePasswordType,
   refreshTokenType,
@@ -13,10 +13,10 @@ import {
   resetTokenType,
   userType,
 } from "../schemas";
-import { cloudianryUploadImage } from "../utils/cloudinary";
+import { cloudianryUploadImage } from "../utils/cloudinary.utils";
 import crypto from "crypto";
-import { sendMail } from "../utils/email";
-import { emailDetailUtils } from "../utils/emailDetail";
+import { sendMail } from "../utils/sendEmail.utils";
+import { emailDetailUtils } from "../utils/emailDetail.utils";
 
 interface loginData {
   email: string;

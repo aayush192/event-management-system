@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
-import { checkRoleUtility } from "../utils/roleCheck";
+import { checkRoleUtility } from "../utils/roleCheck.utils";
 
 interface userData {
   id: string;

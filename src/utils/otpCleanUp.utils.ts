@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { prisma } from "../config/prisma";
+import { prisma } from "../config/prisma.config";
 cron.schedule("0 * * * *", async () => {
   const deleteOtp = await prisma.mailToken.deleteMany({
     where: {

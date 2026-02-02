@@ -1,6 +1,6 @@
-import { prisma } from "../config/prisma";
+import { prisma } from "../config/prisma.config";
 import fs from "fs/promises";
-import apiError from "../utils/apiError";
+import apiError from "../utils/apiError.utils";
 import {
   createEventType,
   filterEventType,
@@ -15,8 +15,8 @@ import {
   cloudinaryRemoveImage,
   cloudinaryRemoveMultipleImage,
   cloudinaryGetImage,
-} from "../utils/cloudinary";
-import { pagination } from "../utils/pagination";
+} from "../utils/cloudinary.utils";
+import { pagination } from "../utils/pagination.utils";
 
 //filter Event
 export const filterEventServices = async (
@@ -74,14 +74,14 @@ export const filterEventServices = async (
 };
 
 //search event
-export const searchEvent = async (
+export const searchEventServices = async (
   page: number,
   pageSize: number,
   searchValue: searchEventType,
   user: userType
 ) => {
   const { currentPage, skip, take } = pagination(page, pageSize);
-
+  //const status = user.role !== "admin" ? "APPROVED" : undefined;
   const [searchEvent, totalEvent] = await prisma.$transaction([
     prisma.event.findMany({
       skip,

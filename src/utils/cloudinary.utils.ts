@@ -1,13 +1,6 @@
-import { v2 as cloudinary } from "cloudinary";
 import fs from "fs/promises";
-import config from "../config/config";
-import apiError from "./apiError";
-
-cloudinary.config({
-  cloud_name: config.CLOUDINARY_CLOUD_NAME,
-  api_key: config.CLOUDINARY_API_KEY,
-  api_secret: config.CLOUDINARY_SECRET,
-});
+import apiError from "./apiError.utils";
+import { cloudinary } from "../config";
 
 export const cloudianryUploadImage = async (fileToUpload: string) => {
   try {

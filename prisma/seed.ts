@@ -1,5 +1,5 @@
 import { admin } from "./seedingData";
-import { prisma } from "../src/config/prisma";
+import { prisma } from "../src/config/prisma.config";
 import bcrypt from "bcrypt";
 const seeding = async () => {
   const hashedPassword = bcrypt.hashSync(admin.password, 10);

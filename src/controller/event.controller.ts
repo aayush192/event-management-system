@@ -11,7 +11,7 @@ import {
   deleteEventImagesServices,
   updateEventServices,
 } from "../services";
-import apiError from "../utils/apiError";
+import apiError from "../utils/apiError.utils";
 import {
   updateEventStatusType,
   statusType,
@@ -20,8 +20,8 @@ import {
   createEventType,
   filterEventType,
 } from "../schemas";
-import { asyncHandler } from "../utils/asyncHandler";
-import { resHandler } from "../utils/responseHandler";
+import { asyncHandler } from "../utils/asyncHandler.utils";
+import { resHandler } from "../utils/responseHandler.utils";
 import { number } from "zod";
 
 //get event
@@ -56,10 +56,7 @@ export const getEventController = asyncHandler(
   }
 );
 
-export const searchEventController = asyncHandler(async () => {
-  
-})
-
+export const searchEventController = asyncHandler(async () => {});
 
 export const postEventController = asyncHandler(
   async (req: Request, res: Response) => {
