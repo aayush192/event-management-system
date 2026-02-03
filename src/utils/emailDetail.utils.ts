@@ -5,25 +5,12 @@ import { sendMail } from "./sendEmail.utils";
 import { addMailInQueue } from "./emailQueue.utils";
 export const emailDetailUtils = async (
   email: string,
+  token: string,
   subject: string,
   message: string,
   baseUrl: string,
   purpose: "REGISTER_USER" | "RESET_PASSWORD"
 ) => {
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiresIn = new Date(Date.now() + 10 * 60 * 1000);
-  const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
-
-  const storeToken = await prisma.mailToken.create({
-    data: {
-      hashedToken: hashedToken,
-      email: email,
-      purpose,
-      expiresAt: expiresIn,
-    },
-  });
-
-  if (!storeToken) throw new apiError(500, "failed to store token");
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>

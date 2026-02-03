@@ -1,0 +1,424 @@
+import { prisma } from "../config/prisma.config";
+import apiError from "../utils/apiError.utils";
+import { cloudianryUploadImage, cloudinaryRemoveImage, cloudinaryRemoveMultipleImage, cloudinaryGetImage, addMailInQueue, pagination, } from "../utils";
+//filter Event
+export const filterEventServices = async (page, pageSize, SearchValue, user) => {
+    const { currentPage, skip, take } = pagination(page, pageSize);
+    const [searchEvent, totalEvent] = await prisma.$transaction([
+        prisma.event.findMany({
+            skip,
+            take,
+            where: {
+                ...SearchValue,
+            },
+            include: {
+                eventImage: true,
+            },
+        }),
+        prisma.event.count({
+            where: {
+                ...SearchValue,
+                status: "APPROVED",
+            },
+        }),
+    ]);
+    if (searchEvent.length === 0)
+        throw new apiError(404, "failed get event");
+    const eventWithImage = searchEvent.map((event) => {
+        return {
+            ...event,
+            coverImageUrl: cloudinaryGetImage(event.publicId),
+            eventImage: event.eventImage.map((image) => {
+                return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+            }),
+        };
+    });
+    const totalPage = totalEvent / take;
+    return {
+        event: eventWithImage,
+        meta: {
+            page: currentPage,
+            pageSize: take,
+            totalCount: totalEvent,
+            totalPage: Math.ceil(totalPage),
+            hasNext: currentPage < totalPage,
+            hasPrevious: currentPage > 1,
+        },
+    };
+};
+//search event
+export const searchEventServices = async (page, pageSize, searchValue, user) => {
+    const { currentPage, skip, take } = pagination(page, pageSize);
+    console.log(take);
+    const status = user.role !== "admin" ? "APPROVED" : undefined;
+    const [searchEvent, totalEvent] = await prisma.$transaction([
+        prisma.event.findMany({
+            skip,
+            take,
+            where: {
+                OR: [
+                    { name: { contains: searchValue, mode: "insensitive" } },
+                    { description: { contains: searchValue, mode: "insensitive" } },
+                ],
+                status,
+            },
+            include: {
+                eventImage: true,
+            },
+        }),
+        prisma.event.count({
+            where: {
+                OR: [
+                    { name: { contains: searchValue, mode: "insensitive" } },
+                    { description: { contains: searchValue, mode: "insensitive" } },
+                ],
+            },
+        }),
+    ]);
+    if (searchEvent.length === 0)
+        throw new apiError(404, "failed get event");
+    const eventWithImage = searchEvent.map((event) => {
+        return {
+            ...event,
+            coverImageUrl: cloudinaryGetImage(event.publicId),
+            eventImage: event.eventImage.map((image) => {
+                return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+            }),
+        };
+    });
+    const totalPage = totalEvent / take;
+    return {
+        data: eventWithImage,
+        meta: {
+            page: currentPage,
+            pageSize: take,
+            totalCount: totalEvent,
+            totalPage: Math.ceil(totalPage),
+            hasNext: currentPage < totalPage,
+            hasPrevious: currentPage > 1,
+        },
+    };
+};
+//post event
+export const postEventServices = async (data, file, user) => {
+    if (!file.path)
+        throw new apiError(400, `file path not available`);
+    const uploadCoverImage = await cloudianryUploadImage(file.path);
+    const date = new Date(data.eventdate);
+    const [hours, minutes] = data.startTime.split(":").map(Number);
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    const event = await prisma.event.create({
+        data: {
+            name: data.name,
+            description: data.description,
+            eventdate: date.toISOString(),
+            category: data.category,
+            publicId: uploadCoverImage.public_id,
+            location: data.location,
+            userId: user.id,
+        },
+    });
+    if (!event) {
+        await cloudinaryRemoveImage(uploadCoverImage.public_id);
+        throw new apiError(500, "failed to add event");
+    }
+    const subject = "Event Registration Successful!";
+    const email = user.email; // user's email
+    const html = `<p>Hi Organizer,</p>
+      <p>Your event <strong>${event.name}</strong> has been successfully created.</p>
+      <p>We will notify after the event is approved</p>
+      <p><strong>Event Date:</strong> ${event.eventdate}</p>
+      <p>Thank you for using EMS!</p>
+`;
+    addMailInQueue(email, subject, html);
+    return event;
+};
+//update event status
+export const updateEventStatus = async (data) => {
+    const updateEvent = await prisma.event.update({
+        where: {
+            id: data.id,
+        },
+        data: {
+            status: data.status,
+        },
+    });
+    if (!updateEvent)
+        throw new apiError(500, "failed to update event status");
+    const organizerDetail = await prisma.user.findUnique({
+        where: {
+            id: updateEvent.userId,
+        },
+    });
+    if (organizerDetail) {
+        const subject = `Event Status Update`;
+        const email = organizerDetail?.email;
+        const html = `  <h2>Event is ${updateEvent.status}</h2>
+    <p>Hi <strong>${organizerDetail.name}</strong>,</p>
+    <p>The status of your event <strong>${updateEvent.name}</strong> has changed.</p>
+    <p><strong>New Status:</strong> ${updateEvent.status}</p>
+    <p>Event Date: ${updateEvent.eventdate}</p>
+    <p>Thank you!</p>`;
+        await addMailInQueue(email, subject, html);
+    }
+    return updateEvent;
+};
+//delete event
+export const deleteEventServices = async (id, user) => {
+    const checkEvent = await prisma.event.findFirst({
+        where: {
+            id: id,
+        },
+    });
+    if (!checkEvent)
+        throw new apiError(400, `event not found`);
+    if (user.role === "ORGANIZER") {
+        if (user.id !== checkEvent?.userId)
+            throw new apiError(401, `unauthorized`);
+    }
+    await cloudinaryRemoveImage(checkEvent.publicId);
+    const getImagePublicKey = await prisma.eventImage.findMany({
+        select: {
+            publicId: true,
+        },
+        where: {
+            eventId: id,
+        },
+    });
+    if (getImagePublicKey.length !== 0) {
+        await cloudinaryRemoveMultipleImage(getImagePublicKey);
+    }
+    const deleteEvent = await prisma.event.delete({
+        where: {
+            id: id,
+        },
+    });
+    throw new apiError(500, "failed to delete event");
+    return deleteEvent;
+};
+//update event
+export const updateEventServices = async (eventId, data, user) => {
+    const checkEvent = await prisma.event.findFirst({
+        where: {
+            id: eventId,
+        },
+    });
+    if (!checkEvent)
+        throw new apiError(404, "event not found");
+    if (checkEvent.userId !== user.id)
+        throw new apiError(401, "unauthorized");
+    const updateEvent = await prisma.event.update({
+        where: {
+            id: eventId,
+        },
+        data,
+    });
+    if (!updateEvent)
+        throw new apiError(500, "failed to update event");
+    return updateEvent;
+};
+//getEventByStatus
+export const getEventByStatusServices = async (status, page, pageSize) => {
+    const { currentPage, skip, take } = pagination(page, pageSize);
+    const [EventByStatus, totalEvent] = await prisma.$transaction([
+        prisma.event.findMany({
+            skip,
+            take,
+            where: {
+                status: status,
+            },
+            include: {
+                eventImage: true,
+            },
+        }),
+        prisma.event.count({
+            where: {
+                status,
+            },
+        }),
+    ]);
+    if (EventByStatus.length === 0)
+        throw new apiError(400, `event of this status not available`);
+    const eventWithImage = EventByStatus.map((event) => {
+        return {
+            ...event,
+            coverImageUrl: cloudinaryGetImage(event.publicId),
+            eventImage: event.eventImage.map((image) => {
+                return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+            }),
+        };
+    });
+    const totalPage = totalEvent / take;
+    return {
+        event: eventWithImage,
+        meta: {
+            page: currentPage,
+            pageSize: take,
+            totalCount: totalEvent,
+            totalPage: Math.ceil(totalPage),
+            hasNext: currentPage < totalPage,
+            hasPrevious: currentPage > 1,
+        },
+    };
+};
+//get All Event
+export const getAllEventServices = async (page, pageSize) => {
+    const { currentPage, skip, take } = pagination(page, pageSize);
+    const [approvedEvent, totalEvent] = await prisma.$transaction([
+        prisma.event.findMany({
+            skip,
+            take,
+            include: {
+                eventImage: true,
+            },
+        }),
+        prisma.event.count(),
+    ]);
+    if (approvedEvent.length === 0)
+        throw new apiError(404, `event not available`);
+    const eventWithImage = approvedEvent.map((event) => {
+        return {
+            ...event,
+            coverImageUrl: cloudinaryGetImage(event.publicId),
+            eventImage: event.eventImage.map((image) => {
+                return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+            }),
+        };
+    });
+    const totalPage = totalEvent / take;
+    return {
+        event: eventWithImage,
+        meta: {
+            page: currentPage,
+            pageSize: take,
+            totalCount: totalEvent,
+            totalPage: Math.ceil(totalPage),
+            hasNext: currentPage < totalPage,
+            hasPrevious: currentPage > 1,
+        },
+    };
+};
+//organized Event
+export const getOrganizedEventServices = async (user, userId, page, pageSize) => {
+    console.log(user);
+    const { currentPage, skip, take } = pagination(page, pageSize);
+    const [organizedEvent, totalEvent] = (user.role.toUpperCase() === "ORGANIZER" && user.id === userId) ||
+        user.role.toUpperCase() === "ADMIN"
+        ? await prisma.$transaction([
+            prisma.event.findMany({
+                where: {
+                    userId: userId,
+                },
+                skip,
+                take,
+                include: {
+                    eventImage: true,
+                },
+            }),
+            prisma.event.count({
+                where: {
+                    userId,
+                },
+            }),
+        ])
+        : await prisma.$transaction([
+            prisma.event.findMany({
+                where: {
+                    userId: userId,
+                    status: "APPROVED",
+                },
+                skip,
+                take,
+                include: {
+                    eventImage: true,
+                },
+            }),
+            prisma.event.count({
+                where: {
+                    userId,
+                    status: "APPROVED",
+                },
+            }),
+        ]);
+    if (organizedEvent.length === 0)
+        throw new apiError(400, `doesn't have any organized event`);
+    const eventWithImage = organizedEvent.map((event) => {
+        return {
+            ...event,
+            coverImageUrl: cloudinaryGetImage(event.publicId),
+            eventImage: event.eventImage.map((image) => {
+                return { ...image, imageUrl: cloudinaryGetImage(image.publicId) };
+            }),
+        };
+    });
+    const totalPage = totalEvent / pageSize;
+    return {
+        event: eventWithImage,
+        meta: {
+            page: currentPage,
+            pageSize: take,
+            totalCount: totalEvent,
+            totalPage: Math.ceil(totalPage),
+            hasNext: currentPage < totalPage,
+            hasPrevious: currentPage > 1,
+        },
+    };
+};
+//postEventImage
+export const postEventImageServices = async (user, file, eventId) => {
+    //if (!file.path) throw new apiError(400, "image path is not provided");
+    const eventData = await prisma.event.findFirst({
+        where: {
+            id: eventId,
+        },
+    });
+    if (!eventData)
+        throw new apiError(400, "event not available");
+    if (eventData.userId !== user.id)
+        throw new apiError(401, "unauthorized");
+    const filePath = file.map((filepath) => filepath.path);
+    const cloudinaryUploadImages = await Promise.all(filePath.map((path) => {
+        return cloudianryUploadImage(path);
+    }));
+    const imageData = cloudinaryUploadImages.map((image) => ({
+        publicId: image.public_id,
+        eventId: eventId,
+    }));
+    const uploadImage = await prisma.eventImage.createMany({
+        data: imageData,
+    });
+    if (!uploadImage) {
+        for (const image of imageData) {
+            await cloudinaryRemoveImage(image.publicId);
+        }
+        throw new apiError(500, "failed to add event image");
+    }
+    return uploadImage;
+};
+//delete Event Image
+export const deleteEventImagesServices = async (eventImageId, user) => {
+    const checkEventImage = await prisma.eventImage.findUnique({
+        where: {
+            id: eventImageId,
+        },
+    });
+    if (!checkEventImage)
+        throw new apiError(400, "image having this id doesn't exist");
+    const checkEventOrganizer = await prisma.event.findUnique({
+        where: {
+            id: checkEventImage?.eventId,
+        },
+    });
+    if (checkEventOrganizer?.userId !== user.id)
+        throw new apiError(401, "unauthorized");
+    await cloudinaryRemoveImage(checkEventImage.publicId);
+    const deleteImage = await prisma.eventImage.delete({
+        where: {
+            id: eventImageId,
+        },
+    });
+    if (!deleteImage)
+        throw new apiError(500, "failed to delete image");
+    return deleteImage;
+};

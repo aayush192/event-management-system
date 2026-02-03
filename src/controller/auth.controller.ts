@@ -24,7 +24,7 @@ import { resHandler } from "../utils/responseHandler.utils";
 
 export const registerMailController = async (req: Request, res: Response) => {
   const data: getTokenType = req.body;
-  const info = await registerMailServices(data.email);
+  const info = await registerMailServices(data);
   resHandler(res, 200, true, "sent mail successfully");
 };
 
@@ -79,6 +79,7 @@ export const refreshAccessTokenController = asyncHandler(
   }
 );
 
+//logOut controller
 export const logOutController = asyncHandler(
   async (req: Request, res: Response) => {
     const authheader = req.headers.authorization;

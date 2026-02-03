@@ -38,10 +38,6 @@ userRoutes.get(
 );
 userRoutes.get(
   "/user/me",
-  (req, res, next) => {
-    console.log("hell");
-    next();
-  },
   verifyTokenMiddleWare,
   verifyAllowedRoleMiddleWare("ADMIN", "USER", "ORGANIZER"),
   getMeController

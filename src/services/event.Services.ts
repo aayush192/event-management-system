@@ -68,7 +68,7 @@ export const filterEventServices = async (
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 1,
     },
@@ -83,7 +83,8 @@ export const searchEventServices = async (
   user: userType
 ) => {
   const { currentPage, skip, take } = pagination(page, pageSize);
-  //const status = user.role !== "admin" ? "APPROVED" : undefined;
+  console.log(take);
+  const status = user.role !== "admin" ? "APPROVED" : undefined;
   const [searchEvent, totalEvent] = await prisma.$transaction([
     prisma.event.findMany({
       skip,
@@ -93,6 +94,7 @@ export const searchEventServices = async (
           { name: { contains: searchValue, mode: "insensitive" } },
           { description: { contains: searchValue, mode: "insensitive" } },
         ],
+        status,
       },
       include: {
         eventImage: true,
@@ -107,7 +109,6 @@ export const searchEventServices = async (
       },
     }),
   ]);
-
   if (searchEvent.length === 0) throw new apiError(404, "failed get event");
 
   const eventWithImage = searchEvent.map((event) => {
@@ -119,16 +120,15 @@ export const searchEventServices = async (
       }),
     };
   });
-
   const totalPage = totalEvent / take;
 
   return {
-    event: eventWithImage,
+    data: eventWithImage,
     meta: {
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 1,
     },
@@ -311,7 +311,7 @@ export const getEventByStatusServices = async (
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 1,
     },
@@ -350,7 +350,7 @@ export const getAllEventServices = async (page: number, pageSize: number) => {
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 1,
     },
@@ -364,24 +364,49 @@ export const getOrganizedEventServices = async (
   page: number,
   pageSize: number
 ) => {
-  if (user.role === "ORGANIZER" && userId !== user.id)
-    throw new apiError(403, `can't retrive the events`);
+  console.log(user);
 
   const { currentPage, skip, take } = pagination(page, pageSize);
 
-  const [organizedEvent, totalEvent] = await prisma.$transaction([
-    prisma.event.findMany({
-      where: {
-        userId: userId,
-      },
-      skip,
-      take,
-      include: {
-        eventImage: true,
-      },
-    }),
-    prisma.event.count(),
-  ]);
+  const [organizedEvent, totalEvent] =
+    (user.role.toUpperCase() === "ORGANIZER" && user.id === userId) ||
+    user.role.toUpperCase() === "ADMIN"
+      ? await prisma.$transaction([
+          prisma.event.findMany({
+            where: {
+              userId: userId,
+            },
+            skip,
+            take,
+            include: {
+              eventImage: true,
+            },
+          }),
+          prisma.event.count({
+            where: {
+              userId,
+            },
+          }),
+        ])
+      : await prisma.$transaction([
+          prisma.event.findMany({
+            where: {
+              userId: userId,
+              status: "APPROVED",
+            },
+            skip,
+            take,
+            include: {
+              eventImage: true,
+            },
+          }),
+          prisma.event.count({
+            where: {
+              userId,
+              status: "APPROVED",
+            },
+          }),
+        ]);
   if (organizedEvent.length === 0)
     throw new apiError(400, `doesn't have any organized event`);
 
@@ -401,7 +426,7 @@ export const getOrganizedEventServices = async (
       page: currentPage,
       pageSize: take,
       totalCount: totalEvent,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 1,
     },

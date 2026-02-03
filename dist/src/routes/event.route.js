@@ -1,0 +1,17 @@
+import express from "express";
+import { deleteEventController, deleteEventImagesController, getAllEventController, getEventByStatusController, getEventController, getOrganizedEventController, postEventController, postEventImagesController, searchEventController, updateEventController, updateEventStatusController, } from "../controller";
+import { validateBody, validateParams, validateQuery, verifyAllowedRoleMiddleWare, verifyTokenMiddleWare, upload, } from "../middlewares";
+import { createEventSchema, eventIdSchema, eventImageIdSchema, paginationSchema, filterEventSchema, statusSchema, updateEventSchema, updateEventStatusSchema, userIdSchema, searchEventSchema, } from "../schemas";
+const eventRoutes = express.Router();
+eventRoutes.get("/", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"), validateQuery(filterEventSchema), getEventController);
+eventRoutes.get("/organized-event/:userId", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"), validateParams(userIdSchema), validateQuery(paginationSchema), getOrganizedEventController);
+eventRoutes.get("/search-event", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"), validateQuery(searchEventSchema), searchEventController);
+eventRoutes.get("/all-event", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN"), getAllEventController);
+eventRoutes.post("/post-event", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"), upload.single("coverImage"), validateBody(createEventSchema), postEventController);
+eventRoutes.get("/:status", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN"), validateParams(statusSchema), getEventByStatusController);
+eventRoutes.patch("/update/event/:eventId", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"), validateParams(eventIdSchema), validateBody(updateEventSchema), updateEventController);
+eventRoutes.patch("/update/status", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN"), validateBody(updateEventStatusSchema), updateEventStatusController);
+eventRoutes.post("/postimage/:eventId", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER "), validateParams(eventIdSchema), upload.array("images", 5), postEventImagesController);
+eventRoutes.delete("/delete/:eventId", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"), validateParams(eventIdSchema), deleteEventController);
+eventRoutes.delete("/delete/image/:eventImageId", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER"), validateParams(eventImageIdSchema), deleteEventImagesController);
+export default eventRoutes;

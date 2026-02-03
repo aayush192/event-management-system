@@ -9,6 +9,7 @@ import {
   getOrganizedEventController,
   postEventController,
   postEventImagesController,
+  searchEventController,
   updateEventController,
   updateEventStatusController,
 } from "../controller";
@@ -31,6 +32,7 @@ import {
   updateEventSchema,
   updateEventStatusSchema,
   userIdSchema,
+  searchEventSchema,
 } from "../schemas";
 
 const eventRoutes = express.Router();
@@ -45,10 +47,17 @@ eventRoutes.get(
 eventRoutes.get(
   "/organized-event/:userId",
   verifyTokenMiddleWare,
-  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN"),
+  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN","USER"),
   validateParams(userIdSchema),
   validateQuery(paginationSchema),
   getOrganizedEventController
+);
+eventRoutes.get(
+  "/search-event",
+  verifyTokenMiddleWare,
+  verifyAllowedRoleMiddleWare("ORGANIZER", "ADMIN", "USER"),
+  validateQuery(searchEventSchema),
+  searchEventController
 );
 eventRoutes.get(
   "/all-event",

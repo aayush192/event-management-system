@@ -41,6 +41,7 @@ export const filterEventSchema = z.object({
     categorySchema.optional()
   ),
   eventdate: z.date().optional(),
+  location: z.string().optional(),
   page: z.coerce.number().int().optional(),
   offset: z.coerce.number().int().optional(),
 });

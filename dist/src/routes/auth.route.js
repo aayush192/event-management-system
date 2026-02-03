@@ -1,0 +1,14 @@
+import express from "express";
+import { changePasswordController, resetPasswordEmailController, loginUserController, refreshAccessTokenController, registerUserController, resetPasswordController, registerMailController, logOutController, } from "../controller";
+import { validateBody, verifyTokenMiddleWare, verifyAllowedRoleMiddleWare, upload, } from "../middlewares";
+import { changePasswordSchema, getTokenSchema, loginSchema, registerUserSchema, resetPasswordSchema, } from "../schemas";
+const authRoutes = express.Router();
+authRoutes.post("/login", validateBody(loginSchema), loginUserController);
+authRoutes.post("/register/mail", validateBody(getTokenSchema), registerMailController);
+authRoutes.post("/register", upload.single("image"), validateBody(registerUserSchema), registerUserController);
+authRoutes.patch("/change-password", validateBody(changePasswordSchema), verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"), changePasswordController);
+authRoutes.post("/log-out", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN", "ORGANIZER", "USER"), logOutController);
+authRoutes.post("/forget-password", validateBody(getTokenSchema), resetPasswordEmailController);
+authRoutes.patch("/reset-password", validateBody(resetPasswordSchema), resetPasswordController);
+authRoutes.patch("/refresh-token", refreshAccessTokenController);
+export default authRoutes;

@@ -75,7 +75,7 @@ model Event {
   id            String         @id @default(uuid())
   name          String
   description   String
-  createdAt      DateTime       @default(now())
+  createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   eventdate     DateTime
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -92,10 +92,10 @@ model Event {
 }
 
 model EventImage {
-  id       String @id @default(uuid())
-  publicId String
-  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId  String
+  id        String   @id @default(uuid())
+  publicId  String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String
   createdAt DateTime @default(now())
 
   @@index(eventId)
@@ -114,16 +114,16 @@ model Registration {
 }
 
 model mailToken {
-  id          String   @id @default(uuid())
-  hashedToken String
-  email       String
-  purpose     Purpose
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  token     String   @unique
+  email     String
+  purpose   Purpose
+  expiresAt DateTime
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  isUsed      Boolean  @default(false)
+  isUsed    Boolean  @default(false)
 
-  @@unique([email, hashedToken, purpose])
+  @@unique([email,token,purpose])
 }
 
 model blackList {

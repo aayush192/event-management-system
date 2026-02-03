@@ -27,14 +27,14 @@ import { number } from "zod";
 export const getUserByIdController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
-    const getUserById = await getUserByIdServices(userId as string);
+    const data = await getUserByIdServices(userId as string);
 
     return resHandler(
       res,
       200,
       true,
       "user retrived successfully",
-      getUserById
+      data
     );
   }
 );

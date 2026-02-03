@@ -6,8 +6,13 @@ dotenv.config({
   quiet: true,
 });
 
+ process.env.NODE_ENV === "production" ? dotenv.config({
+  path: "./.env.production"
+}) :
+  dotenv.config({
+    path:"./.env"
+  })
 const env = valiadateEnv.parse(process.env);
-
 export default {
   DATABASE_URL: env.DATABASE_URL,
   JWT_SECRET: env.JWT_SECRET,
@@ -25,4 +30,7 @@ export default {
 
   REDIS_HOST: process.env.REDIS_HOST,
   REDIS_PORT: process.env.REDIS_PORT,
+
+  JWT_VALIDATE_SECRET: process.env.JWT_VALIDATE_SECRET,
+  JWT_VALIDATE_TOKEN_EXPIRES_IN: process.env.JWT_VALIDATE_TOKEN_EXPIRES_IN,
 };

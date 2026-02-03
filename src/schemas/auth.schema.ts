@@ -7,8 +7,16 @@ export const paginationSchema = z.object({
   offset: z.coerce.number().int().optional(),
 });
 
+export const searchEventSchema = paginationSchema.extend({
+  search: z.string().optional(),
+});
+
 export const registerUserSchema = userSchema
-  .omit({ id: true })
+  .omit({
+    id: true,
+    email: true,
+    role: true,
+  })
   .extend({
     password: z
       .string()
@@ -59,6 +67,13 @@ export const valiadateEnv = z.object({
     .nonempty("cloudinary api secret can't be empty"),
   EMAIL: z.email().nonempty("email can't be empty"),
   PASSWORD: z.string().nonempty("password can't cn't be empty"),
+
+  REDIS_HOST: z.string().nonempty("redis host can't be empty"),
+  REDIS_PORT: z.string().nonempty("redis port can't be empty"),
+  JWT_VALIDATE_SECRET: z.string().nonempty("jwt secret key can't be empty"),
+  JWT_VALIDATE_TOKEN_EXPIRES_IN: z
+    .string()
+    .nonempty("jwt token expire time can't be empty"),
 });
 
 export const changePasswordSchema = z
@@ -86,6 +101,7 @@ export const verifyOtpSchema = z.object({
 
 export const getTokenSchema = z.object({
   email: z.string(),
+  role: z.enum(["organizer", "user"]),
 });
 
 export const resetTokenSchema = z.object({

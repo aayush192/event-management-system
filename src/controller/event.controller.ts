@@ -10,6 +10,7 @@ import {
   postEventImageServices,
   deleteEventImagesServices,
   updateEventServices,
+  searchEventServices,
 } from "../services";
 import apiError from "../utils/apiError.utils";
 import {
@@ -22,20 +23,26 @@ import {
 } from "../schemas";
 import { asyncHandler } from "../utils/asyncHandler.utils";
 import { resHandler } from "../utils/responseHandler.utils";
-import { number } from "zod";
+import { number, string } from "zod";
 
 //get event
 export const getEventController = asyncHandler(
   async (req: Request, res: Response) => {
     const searchValue = {
-      name: req.query?.name,
+      name: req.query?.name
+        ? { contains: req.query.name, mode: "insensitive" }
+        : undefined,
       category: req.query?.category
         ? String(req.query.category).toUpperCase()
         : undefined,
       eventdate: req.query?.eventdate
         ? new Date(String(req.query.eventdate))
         : undefined,
+      location: req.query?.location
+        ? { contains: req.query.location, mode: "insensitive" }
+        : undefined,
     };
+    console.log(searchValue.location);
     const page = req.query.page || 1;
     const offset = req.query.offset || 15;
 
@@ -56,7 +63,32 @@ export const getEventController = asyncHandler(
   }
 );
 
-//export const searchEventController = asyncHandler(async () => {});
+export const searchEventController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = req.query.page || 1;
+    const offset = req.query.offset || 20;
+    const search = req.query.search;
+
+    if (Array.isArray(search) || typeof search !== "string")
+      throw new apiError(400, "search value can't be an array");
+
+    const { data, meta } = await searchEventServices(
+      Number(page),
+      Number(offset),
+      search!,
+      req.user!
+    );
+
+    return resHandler(
+      res,
+      200,
+      true,
+      "event retrived successfully",
+      data,
+      meta
+    );
+  }
+);
 
 export const postEventController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -101,8 +133,8 @@ export const deleteEventController = asyncHandler(
 export const getEventByStatusController = asyncHandler(
   async (req: Request, res: Response) => {
     const { status } = req.params;
-    const page = req.query.page;
-    const offset = req.query.offset;
+    const page = req.query.page||1;
+    const offset = req.query.offset||10;
     const upperCaseStatus = Array.isArray(status)
       ? () => {
           throw new apiError(400, `got array of status`);
@@ -141,8 +173,8 @@ export const getAllEventController = asyncHandler(
 export const getOrganizedEventController = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    const page = req.query.page;
-    const offset = req.query.offset;
+    const page = req.query.page || 1;
+    const offset = req.query.offset || 10;
     const { event, meta } = await getOrganizedEventServices(
       req.user!,
       userId as string,

@@ -86,7 +86,7 @@ export const getUserServices = async (page: number, pageSize: number) => {
   ]);
   if (!user) throw new apiError(404, "failed to get User");
   const userWithProfile = user.map((user) => {
-    if (user.profile?.publicId)
+    if (user.profile?.publicId) {
       return {
         ...user,
         profile: {
@@ -94,8 +94,11 @@ export const getUserServices = async (page: number, pageSize: number) => {
           imageUrl: cloudinaryGetImage(user.profile.publicId),
         },
       };
+    } else {
+      return user;
+    }
   });
-
+  console.log(userWithProfile);
   const totalPage = totalUser / take;
   return {
     data: userWithProfile,
@@ -103,7 +106,7 @@ export const getUserServices = async (page: number, pageSize: number) => {
       page: currentPage,
       pageSize: take,
       totalCount: totalUser,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 1,
     },
@@ -170,7 +173,7 @@ export const getRegisteredUserServices = async (
       page: currentPage,
       pageSize: take,
       totalCount: totalRegisteredUser,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 1,
     },
@@ -358,7 +361,7 @@ export const getOrganizerServices = async (page: number, pageSize: number) => {
     meta: {
       page: currentPage,
       pageSize: take,
-      totalPage,
+      totalPage: Math.ceil(totalPage),
       totalCount: totalOrganizer,
       hasNext: currentPage < totalPage,
       hasPrevious: currentPage > 0,

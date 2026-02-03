@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import jwt, { Jwt } from "jsonwebtoken";
+import jwt, { Jwt, SignOptions } from "jsonwebtoken";
 import { prisma } from "../config/prisma.config";
 import config from "../config/config";
 import apiError from "../utils/apiError.utils";
@@ -7,6 +7,7 @@ import { generateTokens } from "../utils/generateTokens.utils";
 import { checkRoleUtility } from "../utils/roleCheck.utils";
 import {
   changePasswordType,
+  getTokenType,
   refreshTokenType,
   registerUserType,
   resetPasswordType,
@@ -21,13 +22,20 @@ import {
 } from "../utils";
 import crypto from "crypto";
 
-interface loginData {
+interface loginType {
   email: string;
   password: string;
 }
+interface registerType{
+  email: string;
+  role:"organizer"|"user"
+}
+interface resetType{
+  email: string;
+}
 
 //user login
-export const authLoginServices = async (data: loginData) => {
+export const authLoginServices = async (data: loginType) => {
   const fetchedUserData = await prisma.user.findFirst({
     select: {
       id: true,
@@ -84,12 +92,13 @@ export const authRegisterServices = async (
   file: Express.Multer.File,
   token: string
 ) => {
-  const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
+
+  const decryptedToken = jwt.verify(token, config.JWT_VALIDATE_SECRET!) as registerType
   const checkIfExist = await prisma.mailToken.findUnique({
     where: {
-      email_hashedToken_purpose: {
-        email: data.email,
-        hashedToken,
+      email_token_purpose: {
+        email:decryptedToken.email,
+        token,
         purpose: "REGISTER_USER",
       },
       expiresAt: { gt: new Date() },
@@ -98,9 +107,9 @@ export const authRegisterServices = async (
   });
   const updateToken = await prisma.mailToken.update({
     where: {
-      email_hashedToken_purpose: {
-        email: data.email,
-        hashedToken,
+      email_token_purpose: {
+        email: decryptedToken.email,
+        token,
         purpose: "REGISTER_USER",
       },
       isUsed: false,
@@ -112,12 +121,11 @@ export const authRegisterServices = async (
 
   const checkRole = await prisma.role.findFirst({
     where: {
-      role: data.role,
+      role: decryptedToken.role,
     },
   });
   if (!checkRole) throw new apiError(400, `role doesn't exist`);
-  if (data.role.toLocaleLowerCase() === "admin")
-    throw new apiError(401, `can't choose admin role`);
+
   const hashedpasword = bcrypt.hashSync(data.password, 10);
 
   if (!file) throw new apiError(400, "failed to upload image");
@@ -127,7 +135,7 @@ export const authRegisterServices = async (
   const user = await prisma.user.create({
     data: {
       name: data.name,
-      email: data.email,
+      email: decryptedToken.email,
       password: hashedpasword,
       roleId: checkRole.id,
       profile: {
@@ -149,7 +157,7 @@ export const authRegisterServices = async (
   });
   const { accessToken, refreshToken } = generateTokens({
     ...user,
-    role: data.role,
+    role: decryptedToken.role,
   });
 
   const subject = "Welcome to EMS";
@@ -166,7 +174,7 @@ The EMS Team</p>
 
   await addMailInQueue(email, subject, html);
 
-  return { ...user, role: data.role, accessToken, refreshToken };
+  return { ...user, role:decryptedToken.role, accessToken, refreshToken };
 };
 
 //change passswod
@@ -214,13 +222,28 @@ export const passwordResetMailServices = async (email: string) => {
 
   if (!checkUser) throw new apiError(400, `user credentials doesn't match`);
 
+  const token = jwt.sign({ email }, config.JWT_VALIDATE_SECRET!, {
+    expiresIn:config.JWT_VALIDATE_TOKEN_EXPIRES_IN as SignOptions["expiresIn"] ||'10m'
+  })
   const emailSubject = "Reset Password";
   const emailMessage =
     "We received a request to reset your password. Click the button below to set a new password. This link will expire in 10 minutes.";
   const baseUrl = `http://localhost:5173/resetpassword`;
   const purpose = "RESET_PASSWORD";
+  const expiresAt=new Date(Date.now()+10*60*10)
+
+  const storeToken = await prisma.mailToken.create({
+    data: {
+      token,
+      email,
+      purpose,
+      expiresAt
+    }
+  })
+
   const info = emailDetailUtils(
     email,
+    token,
     emailSubject,
     emailMessage,
     baseUrl,
@@ -231,22 +254,43 @@ export const passwordResetMailServices = async (email: string) => {
 };
 
 //send mail for registration
-export const registerMailServices = async (email: string) => {
+export const registerMailServices = async (data: getTokenType) => {
+  const { email, role } = data;
   const checkUser = await prisma.user.findFirst({
     where: {
       email,
     },
   });
 
-  if (checkUser) throw new apiError(400, `user with this email already exist`);
+  if (checkUser)
+    throw new apiError(400, `user having this email already exist`);
+
+  const token = jwt.sign({ email, role }, config.JWT_VALIDATE_SECRET!, {
+    expiresIn:
+      (config.JWT_VALIDATE_TOKEN_EXPIRES_IN as SignOptions["expiresIn"]) ||
+      "10m",
+  });
 
   const emailSubject = "User Registration";
   const emailMessage =
     "We received a request to create an account using this email address.To continue with registration, please verify your email by clicking the button below.";
   const baseUrl = `http://localhost:5173/register`;
+
   const purpose = "REGISTER_USER";
+  const expiresAt = new Date(Date.now() + 10 * 60 * 10);
+
+  const storeToken = await prisma.mailToken.create({
+    data: {
+      token,
+      email,
+      purpose,
+      expiresAt,
+    },
+  });
+
   const info = emailDetailUtils(
     email,
+    token,
     emailSubject,
     emailMessage,
     baseUrl,
@@ -261,11 +305,11 @@ export const resetPasswordServices = async (
   token: string,
   data: resetPasswordType
 ) => {
-  const hashedToken = crypto.createHash("sha512").update(token).digest("hex");
-
+ 
+  const decryptedToken = jwt.verify(token,config.JWT_VALIDATE_SECRET!) as resetType
   const checkToken = await prisma.mailToken.findFirst({
     where: {
-      hashedToken: hashedToken,
+      token,
       isUsed: false,
       expiresAt: { gt: new Date() },
     },
@@ -276,9 +320,9 @@ export const resetPasswordServices = async (
 
   const updateToken = await prisma.mailToken.update({
     where: {
-      email_hashedToken_purpose: {
+      email_token_purpose: {
         email: checkToken?.email,
-        hashedToken: hashedToken,
+        token,
         purpose: "RESET_PASSWORD",
       },
       isUsed: false,
