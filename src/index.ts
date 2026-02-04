@@ -1,5 +1,5 @@
 import express from "express";
-import config from "./config/config";
+import config from "./config/config.js";
 import router from "./routes";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./utils/globalErrorHandler.utils";

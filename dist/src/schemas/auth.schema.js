@@ -1,5 +1,5 @@
 import z from "zod";
-import { userSchema } from "./user.schema";
+import { userSchema } from "./user.schema.js";
 export const paginationSchema = z.object({
     page: z.coerce.number().int().optional(),
     offset: z.coerce.number().int().optional(),

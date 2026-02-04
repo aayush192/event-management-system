@@ -1,8 +1,8 @@
 import express from "express";
-import userRoutes from "./user.route";
-import authRoutes from "./auth.route";
-import eventRoutes from "./event.route";
-import registrationRoutes from "./registration.route";
+import userRoutes from "./user.route.js";
+import authRoutes from "./auth.route.js";
+import eventRoutes from "./event.route.js";
+import registrationRoutes from "./registration.route.js";
 const router = express.Router();
 router.use("/", userRoutes);
 router.use("/auth", authRoutes);

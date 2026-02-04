@@ -1,6 +1,6 @@
-import { prisma } from "../config/prisma.config";
-import apiError from "../utils/apiError.utils";
-import { cloudianryUploadImage, cloudinaryRemoveImage, cloudinaryRemoveMultipleImage, cloudinaryGetImage, addMailInQueue, pagination, } from "../utils";
+import { prisma } from "../config/prisma.config.js";
+import apiError from "../utils/apiError.utils.js";
+import { cloudianryUploadImage, cloudinaryRemoveImage, cloudinaryRemoveMultipleImage, cloudinaryGetImage, addMailInQueue, pagination, } from "../utils/index.js";
 //filter Event
 export const filterEventServices = async (page, pageSize, SearchValue, user) => {
     const { currentPage, skip, take } = pagination(page, pageSize);

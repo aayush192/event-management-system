@@ -1,7 +1,7 @@
-import { deleteProfileImageServices, deleteUserServices, getMeServices, getOrganizerServices, getRegisteredUserServices, getUserByIdServices, getUserServices, updateProfileImageServices, updateProfileServices, updateUserServices, } from "../services";
-import { asyncHandler } from "../utils/asyncHandler.utils";
-import apiError from "../utils/apiError.utils";
-import { resHandler } from "../utils/responseHandler.utils";
+import { deleteProfileImageServices, deleteUserServices, getMeServices, getOrganizerServices, getRegisteredUserServices, getUserByIdServices, getUserServices, updateProfileImageServices, updateProfileServices, updateUserServices, } from "../services/index.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import apiError from "../utils/apiError.utils.js";
+import { resHandler } from "../utils/responseHandler.utils.js";
 //get user by id
 export const getUserByIdController = asyncHandler(async (req, res, next) => {
     const { userId } = req.params;

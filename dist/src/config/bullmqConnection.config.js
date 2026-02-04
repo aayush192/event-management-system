@@ -1,5 +1,5 @@
 import IoRedis from "ioredis";
-import config from "../config/config";
+import config from "./config.js";
 export const queueConnection = new IoRedis({
     host: config.REDIS_HOST || "localhost",
     port: config.REDIS_PORT ? parseInt(config.REDIS_PORT) : 6379,

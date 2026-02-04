@@ -1,7 +1,7 @@
-import { prisma } from "../config/prisma.config";
-import { addMailInQueue } from "../utils";
-import apiError from "../utils/apiError.utils";
-import { pagination } from "../utils/pagination.utils";
+import { prisma } from "../config/prisma.config.js";
+import { addMailInQueue } from "../utils/index.js";
+import apiError from "../utils/apiError.utils.js";
+import { pagination } from "../utils/pagination.utils.js";
 //user registration
 export const userRegistrationServices = async (user, id) => {
     const checkEventStatus = await prisma.event.findUnique({

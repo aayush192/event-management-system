@@ -1,7 +1,7 @@
 import { Queue, Worker } from "bullmq";
-import apiError from "./apiError.utils";
-import { sendMail } from "./sendEmail.utils";
-import { queueConnection, workerConnection } from "../config";
+import apiError from "./apiError.utils.js";
+import { sendMail } from "./sendEmail.utils.js";
+import { queueConnection, workerConnection } from "../config/index.js";
 const authQueue = new Queue("authQueue", { connection: queueConnection });
 const registeredQueue = new Queue("registeredQueue", {
     connection: queueConnection,

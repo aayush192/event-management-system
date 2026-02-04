@@ -1,5 +1,4 @@
 import z, { date, optional, string } from "zod";
-import { omit } from "zod/v4/core/util.cjs";
 
 export const createEventSchema = z.object({
   name: z.string().min(1, { message: "you must provide a name" }),

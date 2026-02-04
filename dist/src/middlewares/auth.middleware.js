@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import { prisma } from "../config";
-import config from "../config/config";
-import apiError from "../utils/apiError.utils";
+import { prisma } from "../config/index.js";
+import config from "../config/config.js";
+import apiError from "../utils/apiError.utils.js";
 export const verifyTokenMiddleWare = async (req, res, next) => {
     const authheader = req.headers.authorization;
     try {

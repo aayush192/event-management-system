@@ -1,8 +1,8 @@
-import { prisma } from "../config/prisma.config";
-import apiError from "../utils/apiError.utils";
-import { cloudianryUploadImage, cloudinaryGetImage, cloudinaryRemoveImage, } from "../utils/cloudinary.utils";
-import { pagination } from "../utils/pagination.utils";
-import { checkRoleUtility } from "../utils/roleCheck.utils";
+import { prisma } from "../config/prisma.config.js";
+import apiError from "../utils/apiError.utils.js";
+import { cloudianryUploadImage, cloudinaryGetImage, cloudinaryRemoveImage, } from "../utils/cloudinary.utils.js";
+import { pagination } from "../utils/pagination.utils.js";
+import { checkRoleUtility } from "../utils/roleCheck.utils.js";
 //get me
 export const getMeServices = async (user) => {
     const getUserData = await prisma.user.findUnique({

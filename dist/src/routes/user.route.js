@@ -1,7 +1,7 @@
 import express from "express";
-import { deleteProfileImageController, deleteUserController, getMeController, getOrganizerController, getRegisteredUserController, getUserByIdController, getUserController, updateProfileController, updateProfileImageController, updateUserController, } from "../controller";
-import { verifyTokenMiddleWare, verifyAllowedRoleMiddleWare, validateBody, validateQuery, validateParams, upload, } from "../middlewares";
-import { eventIdSchema, paginationSchema, updateProfileSchema, updateUserSchema, userIdSchema, } from "../schemas";
+import { deleteProfileImageController, deleteUserController, getMeController, getOrganizerController, getRegisteredUserController, getUserByIdController, getUserController, updateProfileController, updateProfileImageController, updateUserController, } from "../controller/index.js";
+import { verifyTokenMiddleWare, verifyAllowedRoleMiddleWare, validateBody, validateQuery, validateParams, upload, } from "../middlewares/index.js";
+import { eventIdSchema, paginationSchema, updateProfileSchema, updateUserSchema, userIdSchema, } from "../schemas/index.js";
 const userRoutes = express.Router();
 userRoutes.get("/user", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN"), validateQuery(paginationSchema), getUserController);
 userRoutes.get("/user/me", verifyTokenMiddleWare, verifyAllowedRoleMiddleWare("ADMIN", "USER", "ORGANIZER"), getMeController);

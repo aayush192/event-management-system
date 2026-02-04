@@ -1,7 +1,7 @@
-import { deleteEventServices, getAllEventServices, filterEventServices, getEventByStatusServices, getOrganizedEventServices, postEventServices, updateEventStatus, postEventImageServices, deleteEventImagesServices, updateEventServices, searchEventServices, } from "../services";
-import apiError from "../utils/apiError.utils";
-import { asyncHandler } from "../utils/asyncHandler.utils";
-import { resHandler } from "../utils/responseHandler.utils";
+import { deleteEventServices, getAllEventServices, filterEventServices, getEventByStatusServices, getOrganizedEventServices, postEventServices, updateEventStatus, postEventImageServices, deleteEventImagesServices, updateEventServices, searchEventServices, } from "../services/index.js";
+import apiError from "../utils/apiError.utils.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import { resHandler } from "../utils/responseHandler.utils.js";
 //get event
 export const getEventController = asyncHandler(async (req, res) => {
     const searchValue = {

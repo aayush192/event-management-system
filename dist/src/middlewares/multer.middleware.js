@@ -1,5 +1,5 @@
 import multer from "multer";
-import apiError from "../utils/apiError.utils";
+import apiError from "../utils/apiError.utils.js";
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, "public/uploads");

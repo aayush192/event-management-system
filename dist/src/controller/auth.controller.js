@@ -1,7 +1,7 @@
-import { asyncHandler } from "../utils/asyncHandler.utils";
-import { authLoginServices, authRegisterServices, changePasswordServices, logOutServices, passwordResetMailServices, refreshAccessTokenServices, registerMailServices, resetPasswordServices, } from "../services";
-import apiError from "../utils/apiError.utils";
-import { resHandler } from "../utils/responseHandler.utils";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import { authLoginServices, authRegisterServices, changePasswordServices, logOutServices, passwordResetMailServices, refreshAccessTokenServices, registerMailServices, resetPasswordServices, } from "../services/index.js";
+import apiError from "../utils/apiError.utils.js";
+import { resHandler } from "../utils/responseHandler.utils.js";
 export const registerMailController = async (req, res) => {
     const data = req.body;
     const info = await registerMailServices(data);

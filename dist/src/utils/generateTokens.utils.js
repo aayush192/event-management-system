@@ -1,5 +1,5 @@
-import config from "../config/config";
-import apiError from "./apiError.utils";
+import config from "../config/config.js";
+import apiError from "./apiError.utils.js";
 import jwt from "jsonwebtoken";
 export const generateTokens = (User) => {
     if (!config.JWT_REFRESH_TOKEN_SECRET_KEY ||

@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { prisma } from "../config/prisma.config";
+import { prisma } from "../config/prisma.config.js";
 cron.schedule("0 0 * * *", async () => {
     const batchSize = 100;
     try {

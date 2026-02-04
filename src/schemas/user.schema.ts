@@ -1,5 +1,4 @@
 import z, { date, optional } from "zod";
-import { omit } from "zod/v4/core/util.cjs";
 
 export const userSchema = z.object({
   id: z.string(),
@@ -7,7 +6,6 @@ export const userSchema = z.object({
   email: z.string(),
   role: z.string(),
 });
-
 
 export const updateUserSchema = z
   .object({
@@ -31,8 +29,6 @@ export const userIdSchema = z.object({
 
 export type userType = z.infer<typeof userSchema>;
 
-
 export type updateUserType = z.infer<typeof updateUserSchema>;
-
 
 export type updateProfileType = z.infer<typeof updateProfileSchema>;

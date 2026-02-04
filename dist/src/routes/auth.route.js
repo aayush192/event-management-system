@@ -1,7 +1,7 @@
 import express from "express";
-import { changePasswordController, resetPasswordEmailController, loginUserController, refreshAccessTokenController, registerUserController, resetPasswordController, registerMailController, logOutController, } from "../controller";
-import { validateBody, verifyTokenMiddleWare, verifyAllowedRoleMiddleWare, upload, } from "../middlewares";
-import { changePasswordSchema, getTokenSchema, loginSchema, registerUserSchema, resetPasswordSchema, } from "../schemas";
+import { changePasswordController, resetPasswordEmailController, loginUserController, refreshAccessTokenController, registerUserController, resetPasswordController, registerMailController, logOutController, } from "../controller/index.js";
+import { validateBody, verifyTokenMiddleWare, verifyAllowedRoleMiddleWare, upload, } from "../middlewares/index.js";
+import { changePasswordSchema, getTokenSchema, loginSchema, registerUserSchema, resetPasswordSchema, } from "../schemas/index.js";
 const authRoutes = express.Router();
 authRoutes.post("/login", validateBody(loginSchema), loginUserController);
 authRoutes.post("/register/mail", validateBody(getTokenSchema), registerMailController);

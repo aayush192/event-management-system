@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { valiadateEnv } from "../schemas";
+import { valiadateEnv } from "../schemas/index.js";
 dotenv.config({
     path: "./.env",
     quiet: true,

@@ -1,6 +1,6 @@
 import fs from "fs/promises";
-import apiError from "./apiError.utils";
-import { cloudinary } from "../config";
+import apiError from "./apiError.utils.js";
+import { cloudinary } from "../config/index.js";
 export const cloudianryUploadImage = async (fileToUpload) => {
     try {
         const data = await cloudinary.uploader.upload(fileToUpload, {

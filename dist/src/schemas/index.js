@@ -1,3 +1,3 @@
-export * from './event.schema';
-export * from './user.schema';
-export * from './auth.schema';
+export * from './event.schema.js';
+export * from './user.schema.js';
+export * from './auth.schema.js';

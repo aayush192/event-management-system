@@ -1,6 +1,6 @@
-import apiError from "./apiError.utils";
-import config from "../config/config";
-import { transporter } from "../config";
+import apiError from "./apiError.utils.js";
+import config from "../config/config.js";
+import { transporter } from "../config/index.js";
 export const sendMail = async (email, subject, html) => {
     try {
         console.log(email);

@@ -1,6 +1,6 @@
-import { getRegisteredEventServices, userRegistrationServices, deleteUserRegistrationServices, } from "../services";
-import { asyncHandler } from "../utils/asyncHandler.utils";
-import { resHandler } from "../utils/responseHandler.utils";
+import { getRegisteredEventServices, userRegistrationServices, deleteUserRegistrationServices, } from "../services/index.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import { resHandler } from "../utils/responseHandler.utils.js";
 export const userRegistrationController = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const userRegistration = await userRegistrationServices(req.user, eventId);

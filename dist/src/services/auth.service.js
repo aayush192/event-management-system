@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "../config/prisma.config";
-import config from "../config/config";
-import apiError from "../utils/apiError.utils";
-import { generateTokens } from "../utils/generateTokens.utils";
-import { cloudianryUploadImage, addMailInQueue, emailDetailUtils, } from "../utils";
+import { prisma } from "../config/prisma.config.js";
+import config from "../config/config.js";
+import apiError from "../utils/apiError.utils.js";
+import { generateTokens } from "../utils/generateTokens.utils.js";
+import { cloudianryUploadImage, addMailInQueue, emailDetailUtils, } from "../utils/index.js";
 //user login
 export const authLoginServices = async (data) => {
     const fetchedUserData = await prisma.user.findFirst({

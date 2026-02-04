@@ -1,4 +1,4 @@
-import { addMailInQueue } from "./emailQueue.utils";
+import { addMailInQueue } from "./emailQueue.utils.js";
 export const emailDetailUtils = async (email, token, subject, message, baseUrl, purpose) => {
     const html = `<!DOCTYPE html>
 <html lang="en">
