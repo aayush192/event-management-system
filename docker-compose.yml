@@ -1,0 +1,37 @@
+services:
+  my_services:
+    image: event-management-system:latest
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - postgres
+    command: [ "sh", "-c" ,"npx prisma migrate deploy && npx prisma db seed && node dist/src/index.js"]
+    env_file:
+      - .env.production
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hello
+      POSTGRES_DB: ems
+      ports: -"5432:5432"
+      volumes: -postgres_data:/var/lin/postgresql/data
+
+ 
+    
+volumes:
+  redis_data:
+  postgres_data:
