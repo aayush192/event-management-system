@@ -2,6 +2,9 @@ import { admin } from "./seedingData";
 import { prisma } from "../src/config/prisma.config";
 import bcrypt from "bcrypt";
 const seeding = async () => {
+    
+   
+
     const hashedPassword = bcrypt.hashSync(admin.password, 10);
     const adminRegister = await prisma.user.create({
         data: {
