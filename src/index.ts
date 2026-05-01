@@ -13,6 +13,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/health",(req,res)=>{
+res.status(200).json({ status: "ok" });
+}
 app.use("/", router);
 
 app.use(errorHandler);
